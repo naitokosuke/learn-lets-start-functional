@@ -1,6 +1,7 @@
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 import haskell from "shiki/langs/haskell.mjs";
+import githubDarkDefault from "shiki/themes/github-dark-default.mjs";
 
 // ---------------------------------------------------------------------------
 // Locale — the site is built twice: English at "/", Japanese at "/ja/".
@@ -95,25 +96,9 @@ const idris = {
   aliases: ["idris2"],
 };
 
-const monoHighlight = {
-  name: "lsf-mono",
-  type: "dark" as const,
-  colors: {
-    "editor.background": "#101010",
-    "editor.foreground": "#d6d6d6",
-  },
-  settings: [
-    { settings: { background: "#101010", foreground: "#d6d6d6" } },
-    { scope: ["comment", "punctuation.definition.comment"], settings: { foreground: "#6b6b6b" } },
-    { scope: ["keyword", "storage", "keyword.operator"], settings: { foreground: "#ffffff", fontStyle: "bold" } },
-    { scope: ["string", "constant.character", "string.quoted"], settings: { foreground: "#a3a3a3" } },
-    { scope: ["constant.numeric", "constant.language"], settings: { foreground: "#c9c9c9" } },
-    { scope: ["entity.name.function", "support.function"], settings: { foreground: "#f2f2f2" } },
-    { scope: ["entity.name.type", "support.type", "storage.type", "entity.name.namespace"], settings: { foreground: "#e3e3e3" } },
-    { scope: ["punctuation", "meta.brace"], settings: { foreground: "#8c8c8c" } },
-    { scope: ["variable", "meta.definition.variable"], settings: { foreground: "#d6d6d6" } },
-  ],
-};
+// Real syntax colors for code, on a near-black flat background that
+// sits quietly inside the otherwise monochrome design.
+const codeTheme = githubDarkDefault;
 
 // ---------------------------------------------------------------------------
 // Theme — monochrome, flat, quiet. No shadows, no gradients, no serifs.
@@ -123,6 +108,30 @@ const customCss = `
   * { box-shadow: none !important; text-shadow: none !important; }
   .content a { text-decoration: underline; text-underline-offset: 2px; }
   .content h1, .content h2, .content h3 { letter-spacing: -0.01em; }
+  /* the default theme fades code blocks with a top gradient — keep them flat */
+  .content pre {
+    background: var(--octc-color-code-bg) !important;
+    position: relative;
+  }
+  .code-copy {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 2px 8px;
+    font-family: var(--octc-font-sans);
+    font-size: 12px;
+    line-height: 1.6;
+    color: #9a9a9a;
+    background: transparent;
+    border: 1px solid #333333;
+    border-radius: 0;
+    cursor: pointer;
+    opacity: 0;
+    transition: opacity 0.15s ease, color 0.15s ease;
+  }
+  .content pre:hover .code-copy,
+  .code-copy:focus-visible { opacity: 1; }
+  .code-copy:hover { color: #ededed; border-color: #555555; }
   .content blockquote {
     border-left: none;
     padding-left: 0;
@@ -154,6 +163,31 @@ const langSwitchJs = `
     var path = location.pathname;
     link.href = path.indexOf("/ja/") === 0 ? (path.slice(3) || "/") : "/ja" + path;
   })();
+  (function () {
+    function addCopyButtons() {
+      document.querySelectorAll(".content pre").forEach(function (pre) {
+        if (pre.querySelector(".code-copy")) return;
+        var btn = document.createElement("button");
+        btn.className = "code-copy";
+        btn.type = "button";
+        btn.textContent = "Copy";
+        btn.addEventListener("click", function () {
+          var code = pre.querySelector("code");
+          var text = (code || pre).innerText.replace(/\\n$/, "");
+          navigator.clipboard.writeText(text).then(function () {
+            btn.textContent = "Copied";
+            setTimeout(function () { btn.textContent = "Copy"; }, 1500);
+          });
+        });
+        pre.appendChild(btn);
+      });
+    }
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", addCopyButtons);
+    } else {
+      addCopyButtons();
+    }
+  })();
 `;
 
 // ---------------------------------------------------------------------------
@@ -169,7 +203,7 @@ export default defineConfig({
       outDir: isJa ? "dist/ja" : "dist",
       base: isJa ? "/ja/" : "/",
       highlight: true,
-      highlightTheme: monoHighlight,
+      highlightTheme: codeTheme,
       highlightLangs: [idris],
       docs: false,
       search: { enabled: true, hotkey: "/" },
@@ -190,8 +224,8 @@ export default defineConfig({
             text: "#1a1a1a",
             textMuted: "#6e6e6e",
             border: "#e5e5e5",
-            codeBackground: "#101010",
-            codeText: "#d6d6d6",
+            codeBackground: "#0d1117",
+            codeText: "#e6edf3",
           },
           darkColors: {
             primary: "#ededed",
@@ -201,8 +235,8 @@ export default defineConfig({
             text: "#ededed",
             textMuted: "#8f8f8f",
             border: "#242424",
-            codeBackground: "#101010",
-            codeText: "#d6d6d6",
+            codeBackground: "#0d1117",
+            codeText: "#e6edf3",
           },
           layout: {
             maxContentWidth: "760px",
