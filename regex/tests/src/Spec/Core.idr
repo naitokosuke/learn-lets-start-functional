@@ -63,18 +63,18 @@ derivSpecs =
       (deriv 'a' (Lit 'a')) Eps
   , shouldBe "consuming the wrong literal fails"
       (deriv 'b' (Lit 'a')) Fail
-  , shouldBe "a choice derives both branches"
+  , shouldBe "a choice derives both branches — and drops the dead one"
       (deriv 'a' (Alt (Lit 'a') (Lit 'b')))
-      (Alt Eps Fail)
-  , shouldBe "a star unrolls one repetition and keeps going"
+      Eps
+  , shouldBe "a star unrolls one repetition, with no Eps junk in front"
       (deriv 'a' (Star (Lit 'a')))
-      (Cat Eps (Star (Lit 'a')))
-  , shouldBe "a sequence derives its head first"
+      (Star (Lit 'a'))
+  , shouldBe "a sequence derives its head first, simplified"
       (deriv 'a' (Cat (Lit 'a') (Lit 'b')))
-      (Cat Eps (Lit 'b'))
-  , shouldBe "a nullable head lets the character reach the tail too"
+      (Lit 'b')
+  , shouldBe "a nullable head lets the character reach the tail — cleanly"
       (deriv 'b' (Cat (Star (Lit 'a')) (Lit 'b')))
-      (Alt (Cat (Cat Fail (Star (Lit 'a'))) (Lit 'b')) Eps)
+      Eps
   ]
 
 ||| Smart constructors: `cat`, `alt` and `star` build the same six
