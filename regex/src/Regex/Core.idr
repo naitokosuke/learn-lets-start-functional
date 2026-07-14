@@ -175,10 +175,10 @@ deriv _ Eps       = Fail
 deriv c (Lit x)   = if c == x then Eps else Fail
 deriv c (Cat l r) =
   if nullable l
-    then Alt (Cat (deriv c l) r) (deriv c r)
-    else Cat (deriv c l) r
-deriv c (Alt l r) = Alt (deriv c l) (deriv c r)
-deriv c (Star r)  = Cat (deriv c r) (Star r)
+    then alt (cat (deriv c l) r) (deriv c r)
+    else cat (deriv c l) r
+deriv c (Alt l r) = alt (deriv c l) (deriv c r)
+deriv c (Star r)  = cat (deriv c r) (Star r)
 
 ||| Does `r` match the whole string `s`?
 |||
