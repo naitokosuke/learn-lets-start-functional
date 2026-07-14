@@ -13,3 +13,4 @@ modules = Regex
         , Regex.Parse
         , Regex.Syntax
         , Regex.Pretty
+        , Regex.Naive
