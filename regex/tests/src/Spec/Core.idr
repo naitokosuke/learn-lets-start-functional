@@ -76,3 +76,42 @@ derivSpecs =
       (deriv 'b' (Cat (Star (Lit 'a')) (Lit 'b')))
       (Alt (Cat (Cat Fail (Star (Lit 'a'))) (Lit 'b')) Eps)
   ]
+
+||| `matches r s` — the whole engine, end to end: derive once per
+||| character, then ask `nullable`. Full-string semantics.
+export
+matchesSpecs : List Spec
+matchesSpecs =
+  [ it "a literal matches itself"
+      (matches (Lit 'a') "a")
+  , it "a literal rejects a different character"
+      (not (matches (Lit 'a') "b"))
+  , it "Eps matches the empty string"
+      (matches Eps "")
+  , it "matching is exact: 'a' does not match \"ab\""
+      (not (matches (Lit 'a') "ab"))
+  , it "a sequence matches its halves in order"
+      (matches (Cat (Lit 'a') (Lit 'b')) "ab")
+  , it "a sequence cares about order"
+      (not (matches (Cat (Lit 'a') (Lit 'b')) "ba"))
+  , it "a choice accepts its left branch"
+      (matches (Alt (Lit 'a') (Lit 'b')) "a")
+  , it "a choice accepts its right branch"
+      (matches (Alt (Lit 'a') (Lit 'b')) "b")
+  , it "a choice rejects anything else"
+      (not (matches (Alt (Lit 'a') (Lit 'b')) "c"))
+  , it "a* matches the empty string"
+      (matches (Star (Lit 'a')) "")
+  , it "a* matches one repetition"
+      (matches (Star (Lit 'a')) "a")
+  , it "a* matches many repetitions"
+      (matches (Star (Lit 'a')) "aaaaaa")
+  , it "a* rejects intruders"
+      (not (matches (Star (Lit 'a')) "aaba"))
+  , it "(ab)* matches whole pairs only"
+      (matches (Star (Cat (Lit 'a') (Lit 'b'))) "abab")
+  , it "(ab)* rejects a dangling half pair"
+      (not (matches (Star (Cat (Lit 'a') (Lit 'b'))) "aba"))
+  , it "(a|b)*c — a taste of a real pattern"
+      (matches (Cat (Star (Alt (Lit 'a') (Lit 'b'))) (Lit 'c')) "abbac")
+  ]
