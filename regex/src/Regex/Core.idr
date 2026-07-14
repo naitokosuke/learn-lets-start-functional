@@ -45,6 +45,46 @@ data Regex : Type where
   ||| matches the empty string too.
   Star : Regex -> Regex
 
+mutual
+  ||| Render a regex the way you would type its constructors in code.
+  showRegex : Regex -> String
+  showRegex Fail      = "Fail"
+  showRegex Eps       = "Eps"
+  showRegex (Lit c)   = "Lit " ++ show c
+  showRegex (Cat l r) = "Cat " ++ showArg l ++ " " ++ showArg r
+  showRegex (Alt l r) = "Alt " ++ showArg l ++ " " ++ showArg r
+  showRegex (Star r)  = "Star " ++ showArg r
+
+  ||| Constructor arguments need parentheses — except the ones that
+  ||| have no arguments of their own.
+  showArg : Regex -> String
+  showArg Fail = "Fail"
+  showArg Eps  = "Eps"
+  showArg r    = "(" ++ showRegex r ++ ")"
+
+||| Regexes can be printed. `Show` is an *interface* (if you know
+||| Haskell: a type class; if you know Rust: a trait) and this block
+||| is our implementation of it for `Regex`.
+export
+Show Regex where
+  show = showRegex
+
+||| Structural equality: two regexes are equal when they are built
+||| from exactly the same constructors in the same shape.
+|||
+||| Note this is equality of *syntax*, not of *meaning*:
+||| `Alt (Lit 'a') (Lit 'a')` and `Lit 'a'` match the same strings
+||| but are not `==`.
+export
+Eq Regex where
+  Fail      == Fail      = True
+  Eps       == Eps       = True
+  Lit c     == Lit d     = c == d
+  Cat l1 r1 == Cat l2 r2 = l1 == l2 && r1 == r2
+  Alt l1 r1 == Alt l2 r2 = l1 == l2 && r1 == r2
+  Star r1   == Star r2   = r1 == r2
+  _         == _         = False
+
 ||| Does this regex match the empty string?
 |||
 ||| This tiny function is one half of the whole matching algorithm
@@ -68,6 +108,49 @@ nullable (Lit _)   = False
 nullable (Cat l r) = nullable l && nullable r
 nullable (Alt l r) = nullable l || nullable r
 nullable (Star _)  = True
+
+||| Sequence two regexes — but simplify the obvious cases.
+|||
+||| These "smart constructors" use two bits of regex algebra:
+|||
+||| - `Fail` is *absorbing*: nothing followed by anything is nothing.
+||| - `Eps` is the *identity*: the empty string followed by `r` is `r`.
+|||
+||| Why bother? `deriv` builds new regexes out of old ones, and
+||| without simplification the results grow junk like
+||| `Alt (Cat Fail r) Eps` at every step. Simplifying while building
+||| keeps every derivative small — which is what makes the engine
+||| fast in practice, not just in theory.
+public export
+cat : Regex -> Regex -> Regex
+cat Fail _   = Fail
+cat _   Fail = Fail
+cat Eps r    = r
+cat r   Eps  = r
+cat l   r    = Cat l r
+
+||| Choose between two regexes — but simplify the obvious cases.
+|||
+||| `Fail` is the identity of choice (an impossible branch can be
+||| dropped), and choosing between two identical regexes is no
+||| choice at all.
+public export
+alt : Regex -> Regex -> Regex
+alt Fail r    = r
+alt l    Fail = l
+alt l    r    = if l == r then l else Alt l r
+
+||| Repeat a regex — but simplify the obvious cases.
+|||
+||| Repeating the impossible (or the empty string) zero-or-more
+||| times can only ever produce the empty string, and a double star
+||| adds nothing a single star does not.
+public export
+star : Regex -> Regex
+star Fail       = Eps
+star Eps        = Eps
+star (Star r)   = Star r
+star r          = Star r
 
 ||| The Brzozowski derivative: `deriv c r` is the regex matching
 ||| exactly the strings `s` such that `r` matches `c :: s`.
@@ -114,43 +197,3 @@ deriv c (Star r)  = Cat (deriv c r) (Star r)
 public export
 matches : Regex -> String -> Bool
 matches r s = nullable (foldl (flip deriv) r (unpack s))
-
-mutual
-  ||| Render a regex the way you would type its constructors in code.
-  showRegex : Regex -> String
-  showRegex Fail      = "Fail"
-  showRegex Eps       = "Eps"
-  showRegex (Lit c)   = "Lit " ++ show c
-  showRegex (Cat l r) = "Cat " ++ showArg l ++ " " ++ showArg r
-  showRegex (Alt l r) = "Alt " ++ showArg l ++ " " ++ showArg r
-  showRegex (Star r)  = "Star " ++ showArg r
-
-  ||| Constructor arguments need parentheses — except the ones that
-  ||| have no arguments of their own.
-  showArg : Regex -> String
-  showArg Fail = "Fail"
-  showArg Eps  = "Eps"
-  showArg r    = "(" ++ showRegex r ++ ")"
-
-||| Regexes can be printed. `Show` is an *interface* (if you know
-||| Haskell: a type class; if you know Rust: a trait) and this block
-||| is our implementation of it for `Regex`.
-export
-Show Regex where
-  show = showRegex
-
-||| Structural equality: two regexes are equal when they are built
-||| from exactly the same constructors in the same shape.
-|||
-||| Note this is equality of *syntax*, not of *meaning*:
-||| `Alt (Lit 'a') (Lit 'a')` and `Lit 'a'` match the same strings
-||| but are not `==`.
-export
-Eq Regex where
-  Fail      == Fail      = True
-  Eps       == Eps       = True
-  Lit c     == Lit d     = c == d
-  Cat l1 r1 == Cat l2 r2 = l1 == l2 && r1 == r2
-  Alt l1 r1 == Alt l2 r2 = l1 == l2 && r1 == r2
-  Star r1   == Star r2   = r1 == r2
-  _         == _         = False
