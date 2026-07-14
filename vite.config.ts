@@ -1,7 +1,7 @@
 import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
-import haskell from "shiki/langs/haskell.mjs";
 import githubDarkDefault from "shiki/themes/github-dark-default.mjs";
+import idrisGrammar from "./syntaxes/idris.tmLanguage.json";
 
 // ---------------------------------------------------------------------------
 // Locale — the site is built twice: English at "/", Japanese at "/ja/".
@@ -87,11 +87,15 @@ const sidebar = toc.map((part) => ({
 // TextMate grammar is close enough to lex Idris 2 sources).
 // ---------------------------------------------------------------------------
 
-// The Haskell TextMate grammar is close enough to lex Idris 2 sources.
-// (The alias list must not contain the name itself — shiki treats that
-// as a circular alias.)
+// A small hand-written TextMate grammar for Idris 2. The Haskell
+// grammar was close but not close enough: it does not know `|||`
+// doc comments, so it tokenized our (abundant) documentation as
+// code. This one understands doc comments, `--` comments, pragmas,
+// holes, backtick infix, and the keywords this book actually uses.
+// (The alias list must not contain the name itself — shiki treats
+// that as a circular alias.)
 const idris = {
-  ...haskell[0],
+  ...idrisGrammar,
   name: "idris",
   aliases: ["idris2"],
 };
