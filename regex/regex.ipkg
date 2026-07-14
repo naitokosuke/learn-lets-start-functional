@@ -6,7 +6,8 @@ brief = "A linear-time regular expression engine, built test-first"
 
 sourcedir = "src"
 
-modules = Regex.Core
+modules = Regex
+        , Regex.Core
         , Regex.Set
         , Regex.Sugar
         , Regex.Parse

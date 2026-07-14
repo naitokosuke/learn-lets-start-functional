@@ -150,6 +150,12 @@ mutual
   group : Parser Regex
   group = char '(' *> recur alternation <* char ')'
 
+||| The whole grammar as a single parser, for callers that want to
+||| run it themselves (the `Regex` module does, to report positions).
+public export
+patternParser : Parser Regex
+patternParser = alternation
+
 ||| Compile a pattern string into a regex — or `Nothing` when the
 ||| pattern is malformed. The parser must consume every character;
 ||| trailing garbage is a failure, not a warning.
