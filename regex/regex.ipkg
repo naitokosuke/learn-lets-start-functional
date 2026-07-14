@@ -12,3 +12,4 @@ modules = Regex
         , Regex.Sugar
         , Regex.Parse
         , Regex.Syntax
+        , Regex.Pretty

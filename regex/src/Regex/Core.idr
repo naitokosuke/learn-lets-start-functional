@@ -163,6 +163,38 @@ public export
 lit : Char -> Regex
 lit c = Sym (single c)
 
+-- ---------------------------------------------------------------
+-- The regex algebra, made official.
+--
+-- Regex is a monoid twice over: once under sequencing (Eps is the
+-- do-nothing element) and once under choice (Fail is the
+-- nothing-to-choose element). In Haskell you would pick one and
+-- wrap the other in a newtype; Idris lets both coexist as *named*
+-- implementations, chosen explicitly with @{...}.
+-- ---------------------------------------------------------------
+
+public export
+[SeqSemigroup] Semigroup Regex where
+  (<+>) = cat
+
+public export
+[SeqMonoid] Monoid Regex using SeqSemigroup where
+  neutral = Eps
+
+public export
+[AltSemigroup] Semigroup Regex where
+  (<+>) = alt
+
+public export
+[AltMonoid] Monoid Regex using AltSemigroup where
+  neutral = Fail
+
+||| Accept any of the given regexes: fold with the choice monoid.
+||| `anyOf []` is `Fail` — offered no options, match nothing.
+public export
+anyOf : List Regex -> Regex
+anyOf = foldr alt Fail
+
 ||| The Brzozowski derivative: `deriv c r` is the regex matching
 ||| exactly the strings `s` such that `r` matches `c :: s`.
 |||

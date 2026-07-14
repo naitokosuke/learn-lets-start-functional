@@ -26,6 +26,8 @@ import Regex.Parse
 %default covering
 
 ||| Characters that mean something special outside a class.
+||| (Public so the pretty-printer knows what to escape.)
+public export
 isMeta : Char -> Bool
 isMeta c = elem c (unpack "()[]{}|*+?.\\")
 
@@ -117,11 +119,14 @@ postfix =
 
 mutual
   ||| Lowest precedence: sequences separated by `|`.
+  ||| Folded to the right, like concatenation — a consistent shape
+  ||| keeps the pretty-printer's roundtrip exact. (`alt x Fail` is
+  ||| `x`, so the trailing `Fail` seed leaves no junk behind.)
   alternation : Parser Regex
   alternation = do
     first <- sequenceOf
     rest  <- many (char '|' *> sequenceOf)
-    pure (foldl alt first rest)
+    pure (foldr alt Fail (first :: rest))
 
   ||| Middle precedence: juxtaposition. Zero atoms is `Eps`,
   ||| which is why the empty pattern compiles.
