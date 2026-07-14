@@ -13,20 +13,20 @@ astSpecs =
       (show Fail) "Fail"
   , shouldBe "show renders the empty-string regex"
       (show Eps) "Eps"
-  , shouldBe "show renders a character literal"
-      (show (Lit 'a')) "Lit 'a'"
+  , shouldBe "show renders a one-character set"
+      (show (lit 'a')) "Sym (MkSet False [('a', 'a')])"
   , shouldBe "show parenthesizes nested structure"
-      (show (Cat (Lit 'a') (Star (Lit 'b'))))
-      "Cat (Lit 'a') (Star (Lit 'b'))"
+      (show (Star (Alt Eps Fail)))
+      "Star (Alt Eps Fail)"
   , shouldBe "show renders alternation"
-      (show (Alt Eps (Lit 'x')))
-      "Alt Eps (Lit 'x')"
+      (show (Alt Eps (Star Eps)))
+      "Alt Eps (Star Eps)"
   , it "structurally equal regexes are equal"
-      (Cat (Lit 'a') (Alt Eps (Lit 'b')) == Cat (Lit 'a') (Alt Eps (Lit 'b')))
+      (Cat (lit 'a') (Alt Eps (lit 'b')) == Cat (lit 'a') (Alt Eps (lit 'b')))
   , it "different literals are not equal"
-      (Lit 'a' /= Lit 'b')
+      (lit 'a' /= lit 'b')
   , it "different shapes are not equal"
-      (Star (Lit 'a') /= Cat (Lit 'a') (Lit 'a'))
+      (Star (lit 'a') /= Cat (lit 'a') (lit 'a'))
   ]
 
 ||| `nullable r` answers one question: does `r` match the empty string?
@@ -38,17 +38,17 @@ nullableSpecs =
   , shouldBe "Eps matches exactly the empty string"
       (nullable Eps) True
   , shouldBe "a literal needs one character, empty is not enough"
-      (nullable (Lit 'a')) False
+      (nullable (lit 'a')) False
   , shouldBe "a star matches zero repetitions, i.e. the empty string"
-      (nullable (Star (Lit 'a'))) True
+      (nullable (Star (lit 'a'))) True
   , shouldBe "a sequence is nullable only when both halves are"
-      (nullable (Cat Eps (Star (Lit 'a')))) True
+      (nullable (Cat Eps (Star (lit 'a')))) True
   , shouldBe "a sequence with a non-nullable half is not nullable"
-      (nullable (Cat (Star (Lit 'a')) (Lit 'b'))) False
+      (nullable (Cat (Star (lit 'a')) (lit 'b'))) False
   , shouldBe "a choice is nullable when either branch is"
-      (nullable (Alt (Lit 'a') Eps)) True
+      (nullable (Alt (lit 'a') Eps)) True
   , shouldBe "a choice of two literals is not nullable"
-      (nullable (Alt (Lit 'a') (Lit 'b'))) False
+      (nullable (Alt (lit 'a') (lit 'b'))) False
   ]
 
 ||| `deriv c r` is the regex that matches whatever `r` matches
@@ -61,20 +61,20 @@ derivSpecs =
   , shouldBe "Eps has nothing left to give after any character"
       (deriv 'a' Eps) Fail
   , shouldBe "consuming the right literal leaves the empty string"
-      (deriv 'a' (Lit 'a')) Eps
+      (deriv 'a' (lit 'a')) Eps
   , shouldBe "consuming the wrong literal fails"
-      (deriv 'b' (Lit 'a')) Fail
+      (deriv 'b' (lit 'a')) Fail
   , shouldBe "a choice derives both branches — and drops the dead one"
-      (deriv 'a' (Alt (Lit 'a') (Lit 'b')))
+      (deriv 'a' (Alt (lit 'a') (lit 'b')))
       Eps
   , shouldBe "a star unrolls one repetition, with no Eps junk in front"
-      (deriv 'a' (Star (Lit 'a')))
-      (Star (Lit 'a'))
+      (deriv 'a' (Star (lit 'a')))
+      (Star (lit 'a'))
   , shouldBe "a sequence derives its head first, simplified"
-      (deriv 'a' (Cat (Lit 'a') (Lit 'b')))
-      (Lit 'b')
+      (deriv 'a' (Cat (lit 'a') (lit 'b')))
+      (lit 'b')
   , shouldBe "a nullable head lets the character reach the tail — cleanly"
-      (deriv 'b' (Cat (Star (Lit 'a')) (Lit 'b')))
+      (deriv 'b' (Cat (Star (lit 'a')) (lit 'b')))
       Eps
   ]
 
@@ -106,31 +106,31 @@ export
 smartSpecs : List Spec
 smartSpecs =
   [ shouldBe "Fail swallows a sequence from the left"
-      (cat Fail (Lit 'a')) Fail
+      (cat Fail (lit 'a')) Fail
   , shouldBe "Fail swallows a sequence from the right"
-      (cat (Lit 'a') Fail) Fail
+      (cat (lit 'a') Fail) Fail
   , shouldBe "sequencing with the empty string is a no-op (left)"
-      (cat Eps (Lit 'a')) (Lit 'a')
+      (cat Eps (lit 'a')) (lit 'a')
   , shouldBe "sequencing with the empty string is a no-op (right)"
-      (cat (Lit 'a') Eps) (Lit 'a')
+      (cat (lit 'a') Eps) (lit 'a')
   , shouldBe "anything else still nests as Cat"
-      (cat (Lit 'a') (Lit 'b')) (Cat (Lit 'a') (Lit 'b'))
+      (cat (lit 'a') (lit 'b')) (Cat (lit 'a') (lit 'b'))
   , shouldBe "a choice against Fail picks the live branch (left)"
-      (alt Fail (Lit 'a')) (Lit 'a')
+      (alt Fail (lit 'a')) (lit 'a')
   , shouldBe "a choice against Fail picks the live branch (right)"
-      (alt (Lit 'a') Fail) (Lit 'a')
+      (alt (lit 'a') Fail) (lit 'a')
   , shouldBe "identical branches collapse"
-      (alt (Lit 'a') (Lit 'a')) (Lit 'a')
+      (alt (lit 'a') (lit 'a')) (lit 'a')
   , shouldBe "anything else still nests as Alt"
-      (alt (Lit 'a') (Lit 'b')) (Alt (Lit 'a') (Lit 'b'))
+      (alt (lit 'a') (lit 'b')) (Alt (lit 'a') (lit 'b'))
   , shouldBe "the star of Fail can only match the empty string"
       (star Fail) Eps
   , shouldBe "the star of Eps is just Eps"
       (star Eps) Eps
   , shouldBe "a double star collapses to a single one"
-      (star (Star (Lit 'a'))) (Star (Lit 'a'))
+      (star (Star (lit 'a'))) (Star (lit 'a'))
   , shouldBe "anything else still wraps in Star"
-      (star (Lit 'a')) (Star (Lit 'a'))
+      (star (lit 'a')) (Star (lit 'a'))
   ]
 
 ||| `matches r s` — the whole engine, end to end: derive once per
@@ -139,35 +139,35 @@ export
 matchesSpecs : List Spec
 matchesSpecs =
   [ it "a literal matches itself"
-      (matches (Lit 'a') "a")
+      (matches (lit 'a') "a")
   , it "a literal rejects a different character"
-      (not (matches (Lit 'a') "b"))
+      (not (matches (lit 'a') "b"))
   , it "Eps matches the empty string"
       (matches Eps "")
   , it "matching is exact: 'a' does not match \"ab\""
-      (not (matches (Lit 'a') "ab"))
+      (not (matches (lit 'a') "ab"))
   , it "a sequence matches its halves in order"
-      (matches (Cat (Lit 'a') (Lit 'b')) "ab")
+      (matches (Cat (lit 'a') (lit 'b')) "ab")
   , it "a sequence cares about order"
-      (not (matches (Cat (Lit 'a') (Lit 'b')) "ba"))
+      (not (matches (Cat (lit 'a') (lit 'b')) "ba"))
   , it "a choice accepts its left branch"
-      (matches (Alt (Lit 'a') (Lit 'b')) "a")
+      (matches (Alt (lit 'a') (lit 'b')) "a")
   , it "a choice accepts its right branch"
-      (matches (Alt (Lit 'a') (Lit 'b')) "b")
+      (matches (Alt (lit 'a') (lit 'b')) "b")
   , it "a choice rejects anything else"
-      (not (matches (Alt (Lit 'a') (Lit 'b')) "c"))
+      (not (matches (Alt (lit 'a') (lit 'b')) "c"))
   , it "a* matches the empty string"
-      (matches (Star (Lit 'a')) "")
+      (matches (Star (lit 'a')) "")
   , it "a* matches one repetition"
-      (matches (Star (Lit 'a')) "a")
+      (matches (Star (lit 'a')) "a")
   , it "a* matches many repetitions"
-      (matches (Star (Lit 'a')) "aaaaaa")
+      (matches (Star (lit 'a')) "aaaaaa")
   , it "a* rejects intruders"
-      (not (matches (Star (Lit 'a')) "aaba"))
+      (not (matches (Star (lit 'a')) "aaba"))
   , it "(ab)* matches whole pairs only"
-      (matches (Star (Cat (Lit 'a') (Lit 'b'))) "abab")
+      (matches (Star (Cat (lit 'a') (lit 'b'))) "abab")
   , it "(ab)* rejects a dangling half pair"
-      (not (matches (Star (Cat (Lit 'a') (Lit 'b'))) "aba"))
+      (not (matches (Star (Cat (lit 'a') (lit 'b'))) "aba"))
   , it "(a|b)*c — a taste of a real pattern"
-      (matches (Cat (Star (Alt (Lit 'a') (Lit 'b'))) (Lit 'c')) "abbac")
+      (matches (Cat (Star (Alt (lit 'a') (lit 'b'))) (lit 'c')) "abbac")
   ]

@@ -9,24 +9,26 @@
 ||| function that walks this tree.
 module Regex.Core
 
+import Regex.Set
+
 %default total
 
 ||| The abstract syntax of regular expressions.
 |||
 ||| Six constructors are enough to express every classic regex:
 |||
-||| | Constructor | Regex syntax | Matches                              |
-||| |-------------|--------------|--------------------------------------|
-||| | `Fail`      | (none)       | nothing at all — the empty set       |
-||| | `Eps`       | (empty)      | exactly the empty string             |
-||| | `Lit c`     | `c`          | exactly the one-character string "c" |
-||| | `Cat l r`   | `lr`         | an `l`-match followed by an `r`-match|
-||| | `Alt l r`   | `l\|r`       | whatever `l` or `r` matches          |
-||| | `Star r`    | `r*`         | zero or more `r`-matches in a row    |
+||| | Constructor | Regex syntax     | Matches                              |
+||| |-------------|------------------|--------------------------------------|
+||| | `Fail`      | (none)           | nothing at all — the empty set       |
+||| | `Eps`       | (empty)          | exactly the empty string             |
+||| | `Sym s`     | `c` `[a-z]` `.`  | any one character from the set `s`   |
+||| | `Cat l r`   | `lr`             | an `l`-match followed by an `r`-match|
+||| | `Alt l r`   | `l\|r`           | whatever `l` or `r` matches          |
+||| | `Star r`    | `r*`             | zero or more `r`-matches in a row    |
 |||
-||| Everything else you know from regex — `+`, `?`, character classes,
-||| `{n,m}` — is syntactic sugar that we will *compile down* to these
-||| six later in the book.
+||| Everything else you know from regex — `+`, `?`, `{n,m}` — is
+||| syntactic sugar that we will *compile down* to these six later
+||| in the book.
 public export
 data Regex : Type where
   ||| Matches nothing at all: the empty *set* of strings (∅).
@@ -34,8 +36,10 @@ data Regex : Type where
   Fail : Regex
   ||| Matches exactly the empty string (ε).
   Eps : Regex
-  ||| Matches exactly one specific character.
-  Lit : Char -> Regex
+  ||| Matches exactly one character, drawn from a set: literals,
+  ||| classes like `[a-z]`, and the wildcard `.` are all this one
+  ||| constructor with different sets.
+  Sym : CharSet -> Regex
   ||| Sequencing (concatenation): `Cat l r` matches a string that can
   ||| be split so that `l` matches the front and `r` matches the rest.
   Cat : Regex -> Regex -> Regex
@@ -50,7 +54,7 @@ mutual
   showRegex : Regex -> String
   showRegex Fail      = "Fail"
   showRegex Eps       = "Eps"
-  showRegex (Lit c)   = "Lit " ++ show c
+  showRegex (Sym s)   = "Sym (" ++ show s ++ ")"
   showRegex (Cat l r) = "Cat " ++ showArg l ++ " " ++ showArg r
   showRegex (Alt l r) = "Alt " ++ showArg l ++ " " ++ showArg r
   showRegex (Star r)  = "Star " ++ showArg r
@@ -79,7 +83,7 @@ export
 Eq Regex where
   Fail      == Fail      = True
   Eps       == Eps       = True
-  Lit c     == Lit d     = c == d
+  Sym s1    == Sym s2    = s1 == s2
   Cat l1 r1 == Cat l2 r2 = l1 == l2 && r1 == r2
   Alt l1 r1 == Alt l2 r2 = l1 == l2 && r1 == r2
   Star r1   == Star r2   = r1 == r2
@@ -104,7 +108,7 @@ public export
 nullable : Regex -> Bool
 nullable Fail      = False
 nullable Eps       = True
-nullable (Lit _)   = False
+nullable (Sym _)   = False
 nullable (Cat l r) = nullable l && nullable r
 nullable (Alt l r) = nullable l || nullable r
 nullable (Star _)  = True
@@ -152,6 +156,13 @@ star Eps        = Eps
 star (Star r)   = Star r
 star r          = Star r
 
+||| The familiar way to ask for one specific character: a
+||| one-character set. `Lit` from the earlier chapters lives on as
+||| this ordinary function — the AST no longer needs a special case.
+public export
+lit : Char -> Regex
+lit c = Sym (single c)
+
 ||| The Brzozowski derivative: `deriv c r` is the regex matching
 ||| exactly the strings `s` such that `r` matches `c :: s`.
 |||
@@ -172,7 +183,7 @@ public export
 deriv : Char -> Regex -> Regex
 deriv _ Fail      = Fail
 deriv _ Eps       = Fail
-deriv c (Lit x)   = if c == x then Eps else Fail
+deriv c (Sym s)   = if member c s then Eps else Fail
 deriv c (Cat l r) =
   if nullable l
     then alt (cat (deriv c l) r) (deriv c r)
