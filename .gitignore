@@ -1,0 +1,14 @@
+# Idris 2
+build/
+*.ttc
+*.ttm
+
+# Node
+node_modules/
+dist/
+
+# Void
+.void/
+
+# OS / editor
+.DS_Store
