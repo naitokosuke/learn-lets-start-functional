@@ -7,3 +7,4 @@ brief = "A linear-time regular expression engine, built test-first"
 sourcedir = "src"
 
 modules = Regex.Core
+        , Regex.Set
