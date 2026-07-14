@@ -9,3 +9,4 @@ sourcedir = "src"
 modules = Regex.Core
         , Regex.Set
         , Regex.Sugar
+        , Regex.Parse
