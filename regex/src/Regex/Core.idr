@@ -9,6 +9,7 @@
 ||| function that walks this tree.
 module Regex.Core
 
+import Data.List
 import Regex.Set
 
 %default total
@@ -133,16 +134,32 @@ cat Eps r    = r
 cat r   Eps  = r
 cat l   r    = Cat l r
 
-||| Choose between two regexes — but simplify the obvious cases.
+||| Flatten an Alt-spine into the list of its alternatives.
+||| `Fail` contributes nothing — it is the identity of choice.
+altList : Regex -> List Regex
+altList (Alt l r) = altList l ++ altList r
+altList Fail      = []
+altList r         = [r]
+
+||| Rebuild a (deduplicated) list of alternatives into a regex.
+rebuildAlt : List Regex -> Regex
+rebuildAlt []        = Fail
+rebuildAlt [r]       = r
+rebuildAlt (r :: rs) = Alt r (rebuildAlt rs)
+
+||| Choose between two regexes — but normalize while building.
 |||
-||| `Fail` is the identity of choice (an impossible branch can be
-||| dropped), and choosing between two identical regexes is no
-||| choice at all.
+||| Naively, `alt` only needs to drop `Fail` branches and collapse
+||| `alt r r` to `r`. That version worked — until the benchmark
+||| chapter, where deriving `(a?){n}a{n}` grew choices like
+||| `Alt x (Alt y (Alt x ...))`: the duplicate `x` hides deep in the
+||| spine where a shallow equality check never sees it, and memory
+||| runs out. So we normalize properly: flatten every choice into a
+||| list, drop duplicates wherever they sit, and rebuild. Brzozowski
+||| knew this in 1964; we rediscovered it with `make bench`.
 public export
 alt : Regex -> Regex -> Regex
-alt Fail r    = r
-alt l    Fail = l
-alt l    r    = if l == r then l else Alt l r
+alt l r = rebuildAlt (nub (altList l ++ altList r))
 
 ||| Repeat a regex — but simplify the obvious cases.
 |||
@@ -194,6 +211,17 @@ public export
 public export
 anyOf : List Regex -> Regex
 anyOf = foldr alt Fail
+
+||| The number of constructors in a regex — the measuring stick for
+||| claims like "derivatives stay small".
+public export
+size : Regex -> Nat
+size Fail      = 1
+size Eps       = 1
+size (Sym _)   = 1
+size (Cat l r) = S (size l + size r)
+size (Alt l r) = S (size l + size r)
+size (Star r)  = S (size r)
 
 ||| The Brzozowski derivative: `deriv c r` is the regex matching
 ||| exactly the strings `s` such that `r` matches `c :: s`.
