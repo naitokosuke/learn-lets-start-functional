@@ -8,9 +8,11 @@ regex/bench/depends/
 # Node
 node_modules/
 dist/
+*.tsbuildinfo
 
-# Void
+# Void / Cloudflare
 .void/
+.wrangler/
 
 # OS / editor
 .DS_Store

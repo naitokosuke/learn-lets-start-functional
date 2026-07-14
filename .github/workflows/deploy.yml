@@ -4,6 +4,12 @@ on:
   push:
     branches: [main]
 
+# Latest push wins: cancel an in-flight deploy so a newer commit is
+# never overtaken by an older one.
+concurrency:
+  group: void-deploy-${{ github.repository }}-${{ github.ref }}
+  cancel-in-progress: true
+
 # Void authenticates CI deploys with GitHub OIDC: the workflow requests
 # a short-lived identity token, so there is no long-lived secret to
 # store or rotate. `id-token: write` is what allows requesting it.
@@ -12,13 +18,14 @@ permissions:
   contents: read
 
 env:
+  VOID_API_URL: ${{ vars.VOID_API_URL || 'https://api.void.cloud' }}
   VOID_PROJECT: ${{ vars.VOID_PROJECT }}
 
 jobs:
   deploy:
     # Deploys are enabled by setting the repository variable
-    # VOID_PROJECT to the Void project slug (after linking the
-    # project once with `pnpm exec void init` locally).
+    # VOID_PROJECT to the Void project slug, and connecting this
+    # repository to the project in the Void dashboard (one-time).
     if: ${{ vars.VOID_PROJECT != '' }}
     runs-on: ubuntu-latest
     steps:
