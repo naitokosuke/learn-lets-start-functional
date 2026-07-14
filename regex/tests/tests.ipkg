@@ -14,3 +14,4 @@ modules = Main
         , Spec.Sugar
         , Spec.Parse
         , Spec.Syntax
+        , Spec.Api
