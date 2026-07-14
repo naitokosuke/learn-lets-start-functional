@@ -11,7 +11,7 @@
   "scripts": {
     "dev": "vp dev",
     "dev:ja": "DOCS_LOCALE=ja vp dev",
-    "build": "pnpm build:en && pnpm build:ja",
+    "build": "vp build && DOCS_LOCALE=ja vp build",
     "build:en": "vp build",
     "build:ja": "DOCS_LOCALE=ja vp build",
     "preview": "vp preview"

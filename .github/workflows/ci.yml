@@ -1,0 +1,32 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test-engine:
+    name: Idris test suite
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: DeterminateSystems/nix-installer-action@main
+      - name: Install Idris 2
+        run: nix profile install nixpkgs#idris2
+      - name: Run the test suite
+        run: make -C regex test
+
+  build-book:
+    name: Book build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+      - name: Build both locales
+        run: vp run build

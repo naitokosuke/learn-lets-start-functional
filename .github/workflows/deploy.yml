@@ -1,0 +1,35 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+
+# Void authenticates CI deploys with GitHub OIDC: the workflow requests
+# a short-lived identity token, so there is no long-lived secret to
+# store or rotate. `id-token: write` is what allows requesting it.
+permissions:
+  id-token: write
+  contents: read
+
+env:
+  VOID_PROJECT: ${{ vars.VOID_PROJECT }}
+
+jobs:
+  deploy:
+    # Deploys are enabled by setting the repository variable
+    # VOID_PROJECT to the Void project slug (after linking the
+    # project once with `pnpm exec void init` locally).
+    if: ${{ vars.VOID_PROJECT != '' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: voidzero-dev/setup-vp@v1
+        with:
+          node-version: "24"
+          cache: true
+      - name: Install dependencies
+        run: vp install --frozen-lockfile
+      - name: Build both locales
+        run: vp run build
+      - name: Deploy to Void
+        run: vpx void deploy --dir dist --project "$VOID_PROJECT"
