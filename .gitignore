@@ -3,6 +3,7 @@ build/
 *.ttc
 *.ttm
 regex/tests/depends/
+regex/bench/depends/
 
 # Node
 node_modules/

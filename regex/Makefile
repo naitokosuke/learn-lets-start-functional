@@ -24,5 +24,12 @@ test: install
 repl:
 	idris2 --repl regex.ipkg
 
+## Race the derivative engine against the backtracker.
+bench: install
+	rm -rf bench/depends
+	cp -R tests/depends bench/depends
+	idris2 --build bench/bench.ipkg
+	./bench/build/exec/bench
+
 clean:
-	rm -rf build tests/build
+	rm -rf build tests/build tests/depends bench/build bench/depends

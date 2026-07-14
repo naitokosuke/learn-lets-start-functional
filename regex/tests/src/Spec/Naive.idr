@@ -8,9 +8,18 @@
 ||| family and lets the clock tell the story.
 module Spec.Naive
 
+import Data.List
 import Harness
 import Regex
 import Regex.Naive
+
+||| The catastrophic pattern family `(a?){n}a{n}`.
+evil : Nat -> Regex
+evil n = cat (exactly n (opt (lit 'a'))) (exactly n (lit 'a'))
+
+||| Derive `r` through a run of n a's.
+run : Nat -> Regex -> Regex
+run n r = foldl (flip deriv) r (replicate n 'a')
 
 ||| Both engines, same verdict?
 agree : String -> String -> Bool
@@ -38,4 +47,13 @@ naiveSpecs =
   , it "the backtracker agrees on a real-world shape"
       (agree "\\w+@\\w+\\.\\w+" "user@example.com"
         && agree "\\w+@\\w+\\.\\w+" "user@example")
+
+    -- The regression that made this chapter necessary: without
+    -- flattening-and-deduplication in `alt`, the derivatives of
+    -- (a?){n}a{n} grow without bound and eat all memory.
+  , it "derivatives of the catastrophic pattern stay small"
+      (size (run 32 (evil 32)) < 5000)
+  , it "and the catastrophic pattern still matches correctly"
+      (matches (evil 24) (pack (replicate 24 'a'))
+        && not (matches (evil 24) (pack (replicate 23 'a'))))
   ]

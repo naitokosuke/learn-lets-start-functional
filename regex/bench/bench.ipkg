@@ -1,0 +1,10 @@
+package regex-bench
+version = 0.1.0
+
+depends = regex
+
+sourcedir = "src"
+main = Main
+executable = bench
+
+modules = Main
