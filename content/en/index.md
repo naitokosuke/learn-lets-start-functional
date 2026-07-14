@@ -31,7 +31,7 @@ The chapters build on each other, so read them in order. Each one follows the sa
 3. the smallest amount of code that answers it,
 4. and a look at what the language just did for us.
 
-Head to [Why Functional? Why Idris?](./why-functional.md) to begin.
+Head to [Why Functional? Why Idris?](./01-why-functional.md) to begin.
 
 > [!NOTE]
 > All the code lives at [github.com/ubugeeei-prod/lets-start-functional](https://github.com/ubugeeei-prod/lets-start-functional) — the `regex/` directory is the engine, and every chapter's red/green steps are separate commits.

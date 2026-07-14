@@ -31,7 +31,7 @@ JavaScript でも Python でも Rust でも Java でも、何かでプログラ�
 3. それに答える最小限のコード、
 4. そして、言語がいま何をしてくれたのかの振り返り。
 
-[なぜ関数型?なぜ Idris?](./why-functional.md) から始めましょう。
+[なぜ関数型?なぜ Idris?](./01-why-functional.md) から始めましょう。
 
 > [!NOTE]
 > コードはすべて [github.com/ubugeeei-prod/lets-start-functional](https://github.com/ubugeeei-prod/lets-start-functional) にあります。`regex/` ディレクトリがエンジン本体で、各章の red/green ステップは個別のコミットになっています。
