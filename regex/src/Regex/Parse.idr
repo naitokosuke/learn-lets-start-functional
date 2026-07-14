@@ -30,6 +30,24 @@ parse p s =
     Just (a, []) => Just a
     _            => Nothing
 
+||| Consume any single character.
+public export
+anyToken : Parser Char
+anyToken = MkParser $ \cs =>
+  case cs of
+    (c :: rest) => Just (c, rest)
+    []          => Nothing
+
+||| Tie the knot for recursive grammars.
+|||
+||| In a lazy language a grammar can refer to itself and nothing
+||| special happens. Idris evaluates eagerly, so a self-referential
+||| parser value would try to build itself forever. `recur` accepts
+||| the parser *lazily* and only looks inside once input arrives.
+public export
+recur : Lazy (Parser a) -> Parser a
+recur p = MkParser $ \cs => runParser p cs
+
 ||| Consume one character satisfying the predicate.
 public export
 satisfy : (Char -> Bool) -> Parser Char

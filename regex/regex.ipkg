@@ -10,3 +10,4 @@ modules = Regex.Core
         , Regex.Set
         , Regex.Sugar
         , Regex.Parse
+        , Regex.Syntax
