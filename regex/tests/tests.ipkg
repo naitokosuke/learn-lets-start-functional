@@ -16,3 +16,4 @@ modules = Main
         , Spec.Syntax
         , Spec.Api
         , Spec.Pretty
+        , Spec.Naive

@@ -12,6 +12,7 @@ import Spec.Parse
 import Spec.Syntax
 import Spec.Api
 import Spec.Pretty
+import Spec.Naive
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -36,3 +37,4 @@ main = runSpecs $ sanitySpecs
                 ++ syntaxSpecs
                 ++ apiSpecs
                 ++ prettySpecs
+                ++ naiveSpecs
