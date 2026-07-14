@@ -6,6 +6,7 @@
 ||| Thanks to derivatives, all rules advance together in one pass.
 module Spec.Lex
 
+import Data.Maybe
 import Harness
 import Regex.Core
 import Regex.Set
