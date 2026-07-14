@@ -9,6 +9,7 @@ import Spec.Core
 import Spec.Set
 import Spec.Sugar
 import Spec.Parse
+import Spec.Syntax
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -30,3 +31,4 @@ main = runSpecs $ sanitySpecs
                 ++ matchesSpecs
                 ++ sugarSpecs
                 ++ parseSpecs
+                ++ syntaxSpecs
