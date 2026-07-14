@@ -27,3 +27,25 @@ astSpecs =
   , it "different shapes are not equal"
       (Star (Lit 'a') /= Cat (Lit 'a') (Lit 'a'))
   ]
+
+||| `nullable r` answers one question: does `r` match the empty string?
+export
+nullableSpecs : List Spec
+nullableSpecs =
+  [ shouldBe "Fail never matches, so not the empty string either"
+      (nullable Fail) False
+  , shouldBe "Eps matches exactly the empty string"
+      (nullable Eps) True
+  , shouldBe "a literal needs one character, empty is not enough"
+      (nullable (Lit 'a')) False
+  , shouldBe "a star matches zero repetitions, i.e. the empty string"
+      (nullable (Star (Lit 'a'))) True
+  , shouldBe "a sequence is nullable only when both halves are"
+      (nullable (Cat Eps (Star (Lit 'a')))) True
+  , shouldBe "a sequence with a non-nullable half is not nullable"
+      (nullable (Cat (Star (Lit 'a')) (Lit 'b'))) False
+  , shouldBe "a choice is nullable when either branch is"
+      (nullable (Alt (Lit 'a') Eps)) True
+  , shouldBe "a choice of two literals is not nullable"
+      (nullable (Alt (Lit 'a') (Lit 'b'))) False
+  ]
