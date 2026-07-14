@@ -10,3 +10,4 @@ executable = tests
 modules = Main
         , Harness
         , Spec.Core
+        , Spec.Set
