@@ -166,7 +166,7 @@ render p (Cat l r) = wrap (p > 1) (render 2 l ++ render 1 r)
 
 左の子はレベル 2 で、右の子はレベル 1 でレンダリングされます。なぜでしょう?私たちの木では `Cat` が*右結合*だからです:パーサは `abc` を `Cat a (Cat b c)` に畳み込みます。右の子がそれ自身 `Cat` であることは、形からの逸脱ではありません — それこそが形です — だから連接レベルで、括弧なしにレンダリングしてかまわない。一方、`Cat` である*左*の子は、パーサが決して作らない形なので、レベル 2 でのレンダリングがきっちり柵で囲います。同じ非対称性は、1 段下の `Alt` の行にも現れます。レンダラは文法の優先順位を知っているだけではなく、パーサの*結合性*まで知っているのです。
 
-そして、その知識があるものを捕まえました。ラウンドトリップのスペックを通そうとするなかで、どうしても揃わない形がひとつあったのです:連接は右へ畳まれる(`foldr cat Eps`。[パターン構文のパース](./pattern-syntax.md) より)のに、選択は*左*へ畳まれていました。誰も気づいていませんでした。マッチングは `a|b|c` がどちらに傾いていても気にしないからです。しかしプリンタは痛烈に気にします。そこで green のコミットは、[`regex/src/Regex/Syntax.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Syntax.idr) のパーサの方を変更しました:
+そして、その知識があるものを捕まえました。ラウンドトリップのスペックを通そうとするなかで、どうしても揃わない形がひとつあったのです:連接は右へ畳まれる(`foldr cat Eps`。[パターン構文をパースする](./pattern-syntax.md) より)のに、選択は*左*へ畳まれていました。誰も気づいていませんでした。マッチングは `a|b|c` がどちらに傾いていても気にしないからです。しかしプリンタは痛烈に気にします。そこで green のコミットは、[`regex/src/Regex/Syntax.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Syntax.idr) のパーサの方を変更しました:
 
 ```idris
   ||| Lowest precedence: sequences separated by `|`.
