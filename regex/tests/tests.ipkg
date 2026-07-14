@@ -15,3 +15,4 @@ modules = Main
         , Spec.Parse
         , Spec.Syntax
         , Spec.Api
+        , Spec.Pretty

@@ -11,6 +11,7 @@ import Spec.Sugar
 import Spec.Parse
 import Spec.Syntax
 import Spec.Api
+import Spec.Pretty
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -34,3 +35,4 @@ main = runSpecs $ sanitySpecs
                 ++ parseSpecs
                 ++ syntaxSpecs
                 ++ apiSpecs
+                ++ prettySpecs
