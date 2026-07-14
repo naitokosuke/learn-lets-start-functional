@@ -97,6 +97,24 @@ deriv c (Cat l r) =
 deriv c (Alt l r) = Alt (deriv c l) (deriv c r)
 deriv c (Star r)  = Cat (deriv c r) (Star r)
 
+||| Does `r` match the whole string `s`?
+|||
+||| The entire matching algorithm is one line: fold `deriv` over the
+||| characters, then ask `nullable` about what is left.
+|||
+||| ```
+||| matches r "abc"
+|||   = nullable (deriv 'c' (deriv 'b' (deriv 'a' r)))
+||| ```
+|||
+||| Each character is consumed exactly once, left to right. There is
+||| no backtracking to blow up on adversarial input — the number of
+||| derivative steps is always exactly the length of the string.
+||| That is the "linear time" in this book's title.
+public export
+matches : Regex -> String -> Bool
+matches r s = nullable (foldl (flip deriv) r (unpack s))
+
 mutual
   ||| Render a regex the way you would type its constructors in code.
   showRegex : Regex -> String
