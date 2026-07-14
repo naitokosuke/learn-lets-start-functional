@@ -7,6 +7,7 @@ module Main
 import Harness
 import Spec.Core
 import Spec.Set
+import Spec.Sugar
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -26,3 +27,4 @@ main = runSpecs $ sanitySpecs
                 ++ derivSpecs
                 ++ smartSpecs
                 ++ matchesSpecs
+                ++ sugarSpecs
