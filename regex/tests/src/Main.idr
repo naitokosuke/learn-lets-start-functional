@@ -17,4 +17,4 @@ sanitySpecs =
   ]
 
 main : IO ()
-main = runSpecs (sanitySpecs ++ astSpecs ++ nullableSpecs)
+main = runSpecs (sanitySpecs ++ astSpecs ++ nullableSpecs ++ derivSpecs)

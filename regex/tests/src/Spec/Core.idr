@@ -49,3 +49,30 @@ nullableSpecs =
   , shouldBe "a choice of two literals is not nullable"
       (nullable (Alt (Lit 'a') (Lit 'b'))) False
   ]
+
+||| `deriv c r` is the regex that matches whatever `r` matches
+||| *after* consuming the character `c` — the Brzozowski derivative.
+export
+derivSpecs : List Spec
+derivSpecs =
+  [ shouldBe "Fail stays Fail, whatever we feed it"
+      (deriv 'a' Fail) Fail
+  , shouldBe "Eps has nothing left to give after any character"
+      (deriv 'a' Eps) Fail
+  , shouldBe "consuming the right literal leaves the empty string"
+      (deriv 'a' (Lit 'a')) Eps
+  , shouldBe "consuming the wrong literal fails"
+      (deriv 'b' (Lit 'a')) Fail
+  , shouldBe "a choice derives both branches"
+      (deriv 'a' (Alt (Lit 'a') (Lit 'b')))
+      (Alt Eps Fail)
+  , shouldBe "a star unrolls one repetition and keeps going"
+      (deriv 'a' (Star (Lit 'a')))
+      (Cat Eps (Star (Lit 'a')))
+  , shouldBe "a sequence derives its head first"
+      (deriv 'a' (Cat (Lit 'a') (Lit 'b')))
+      (Cat Eps (Lit 'b'))
+  , shouldBe "a nullable head lets the character reach the tail too"
+      (deriv 'b' (Cat (Star (Lit 'a')) (Lit 'b')))
+      (Alt (Cat (Cat Fail (Star (Lit 'a'))) (Lit 'b')) Eps)
+  ]
