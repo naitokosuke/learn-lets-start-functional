@@ -77,6 +77,40 @@ derivSpecs =
       (Alt (Cat (Cat Fail (Star (Lit 'a'))) (Lit 'b')) Eps)
   ]
 
+||| Smart constructors: `cat`, `alt` and `star` build the same six
+||| shapes, but simplify the obvious algebra on the way —
+||| so derivatives stay small instead of accumulating junk.
+export
+smartSpecs : List Spec
+smartSpecs =
+  [ shouldBe "Fail swallows a sequence from the left"
+      (cat Fail (Lit 'a')) Fail
+  , shouldBe "Fail swallows a sequence from the right"
+      (cat (Lit 'a') Fail) Fail
+  , shouldBe "sequencing with the empty string is a no-op (left)"
+      (cat Eps (Lit 'a')) (Lit 'a')
+  , shouldBe "sequencing with the empty string is a no-op (right)"
+      (cat (Lit 'a') Eps) (Lit 'a')
+  , shouldBe "anything else still nests as Cat"
+      (cat (Lit 'a') (Lit 'b')) (Cat (Lit 'a') (Lit 'b'))
+  , shouldBe "a choice against Fail picks the live branch (left)"
+      (alt Fail (Lit 'a')) (Lit 'a')
+  , shouldBe "a choice against Fail picks the live branch (right)"
+      (alt (Lit 'a') Fail) (Lit 'a')
+  , shouldBe "identical branches collapse"
+      (alt (Lit 'a') (Lit 'a')) (Lit 'a')
+  , shouldBe "anything else still nests as Alt"
+      (alt (Lit 'a') (Lit 'b')) (Alt (Lit 'a') (Lit 'b'))
+  , shouldBe "the star of Fail can only match the empty string"
+      (star Fail) Eps
+  , shouldBe "the star of Eps is just Eps"
+      (star Eps) Eps
+  , shouldBe "a double star collapses to a single one"
+      (star (Star (Lit 'a'))) (Star (Lit 'a'))
+  , shouldBe "anything else still wraps in Star"
+      (star (Lit 'a')) (Star (Lit 'a'))
+  ]
+
 ||| `matches r s` — the whole engine, end to end: derive once per
 ||| character, then ask `nullable`. Full-string semantics.
 export

@@ -21,4 +21,5 @@ main = runSpecs $ sanitySpecs
                 ++ astSpecs
                 ++ nullableSpecs
                 ++ derivSpecs
+                ++ smartSpecs
                 ++ matchesSpecs
