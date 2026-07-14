@@ -69,6 +69,34 @@ nullable (Cat l r) = nullable l && nullable r
 nullable (Alt l r) = nullable l || nullable r
 nullable (Star _)  = True
 
+||| The Brzozowski derivative: `deriv c r` is the regex matching
+||| exactly the strings `s` such that `r` matches `c :: s`.
+|||
+||| In plain words: "if `r` had to consume the character `c` first,
+||| what would be left of it?" Matching a whole string is then just
+||| deriving once per character — no backtracking, ever. This is the
+||| reason our engine runs in a single left-to-right pass.
+|||
+||| The two interesting cases:
+|||
+||| - `Cat l r`: the character must be consumed by `l` — unless `l`
+|||   can match the empty string, in which case it may also skip `l`
+|||   and be consumed by `r`. That is exactly where `nullable` earns
+|||   its keep.
+||| - `Star r`: a star that consumes a character has committed to at
+|||   least one repetition: derive one `r`, then the star continues.
+public export
+deriv : Char -> Regex -> Regex
+deriv _ Fail      = Fail
+deriv _ Eps       = Fail
+deriv c (Lit x)   = if c == x then Eps else Fail
+deriv c (Cat l r) =
+  if nullable l
+    then Alt (Cat (deriv c l) r) (deriv c r)
+    else Cat (deriv c l) r
+deriv c (Alt l r) = Alt (deriv c l) (deriv c r)
+deriv c (Star r)  = Cat (deriv c r) (Star r)
+
 mutual
   ||| Render a regex the way you would type its constructors in code.
   showRegex : Regex -> String
