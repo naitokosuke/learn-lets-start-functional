@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <style>
+    text { fill: #111111; }
+    @media (prefers-color-scheme: dark) {
+      text { fill: #ededed; }
+    }
+  </style>
+  <text x="16" y="25" text-anchor="middle"
+        font-family="ui-monospace, 'SF Mono', Menlo, Consolas, monospace"
+        font-size="27" font-weight="600">&#8706;</text>
+</svg>

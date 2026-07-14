@@ -208,6 +208,7 @@ export default defineConfig({
             github: "https://github.com/ubugeeei-prod/lets-start-functional",
           },
           embed: {
+            head: `<link rel="icon" type="image/svg+xml" href="${isJa ? "/ja" : ""}/favicon.svg" />`,
             headerAfter: `<a id="lang-switch" href="${isJa ? "/" : "/ja/"}">${isJa ? "English" : "日本語"}</a>`,
           },
           css: customCss,
