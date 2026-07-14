@@ -18,3 +18,4 @@ modules = Main
         , Spec.Pretty
         , Spec.Naive
         , Spec.Verified
+        , Spec.Lex

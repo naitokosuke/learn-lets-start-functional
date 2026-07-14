@@ -14,6 +14,7 @@ import Spec.Api
 import Spec.Pretty
 import Spec.Naive
 import Spec.Verified
+import Spec.Lex
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -40,3 +41,4 @@ main = runSpecs $ sanitySpecs
                 ++ prettySpecs
                 ++ naiveSpecs
                 ++ verifiedSpecs
+                ++ lexSpecs
