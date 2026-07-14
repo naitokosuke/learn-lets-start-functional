@@ -3,6 +3,7 @@ module Spec.Core
 
 import Harness
 import Regex.Core
+import Regex.Set
 
 ||| The AST is just data: we can build it, print it, and compare it.
 export
@@ -75,6 +76,27 @@ derivSpecs =
   , shouldBe "a nullable head lets the character reach the tail — cleanly"
       (deriv 'b' (Cat (Star (Lit 'a')) (Lit 'b')))
       Eps
+  ]
+
+||| The `Sym` constructor generalizes single-character literals to
+||| whole character sets — `.`, `[a-z]`, `\d` and friends.
+export
+symSpecs : List Spec
+symSpecs =
+  [ it "a range matches any character inside it"
+      (matches (Sym (range 'a' 'z')) "q")
+  , it "a range rejects characters outside it"
+      (not (matches (Sym (range 'a' 'z')) "Q"))
+  , it "the wildcard matches any single character"
+      (matches (Sym anyChar) "!")
+  , it "the wildcard still needs exactly one character"
+      (not (matches (Sym anyChar) "") && not (matches (Sym anyChar) "ab"))
+  , it "\\d* matches a run of digits"
+      (matches (Star (Sym digit)) "2026")
+  , it "a negated class matches everything but its members"
+      (matches (Star (Sym (complement (oneOf "\"")))) "no quotes here")
+  , it "lit is still available as a one-character set"
+      (matches (lit 'a') "a" && not (matches (lit 'a') "b"))
   ]
 
 ||| Smart constructors: `cat`, `alt` and `star` build the same six
