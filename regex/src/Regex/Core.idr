@@ -45,6 +45,30 @@ data Regex : Type where
   ||| matches the empty string too.
   Star : Regex -> Regex
 
+||| Does this regex match the empty string?
+|||
+||| This tiny function is one half of the whole matching algorithm
+||| (the other half is `deriv`). Read each line as a fact about the
+||| empty string:
+|||
+||| - `Fail` matches nothing, so certainly not the empty string.
+||| - `Eps` is *defined* as matching the empty string.
+||| - A literal needs one real character.
+||| - A sequence matches "" only if both halves can match "".
+||| - A choice matches "" if either branch does.
+||| - A star matches zero repetitions, which is exactly "".
+|||
+||| There is no algorithm here to memorize — the function is just the
+||| definition of "matches the empty string", written case by case.
+public export
+nullable : Regex -> Bool
+nullable Fail      = False
+nullable Eps       = True
+nullable (Lit _)   = False
+nullable (Cat l r) = nullable l && nullable r
+nullable (Alt l r) = nullable l || nullable r
+nullable (Star _)  = True
+
 mutual
   ||| Render a regex the way you would type its constructors in code.
   showRegex : Regex -> String
