@@ -5,6 +5,7 @@
 module Main
 
 import Harness
+import Spec.Core
 
 ||| Sanity checks for the harness itself — the very first red/green
 ||| cycle of this project was making these pass.
@@ -16,4 +17,4 @@ sanitySpecs =
   ]
 
 main : IO ()
-main = runSpecs sanitySpecs
+main = runSpecs (sanitySpecs ++ astSpecs)
