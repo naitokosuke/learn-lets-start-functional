@@ -1,0 +1,9 @@
+package regex
+version = 0.1.0
+authors = "ubugeeei"
+license = "MIT"
+brief = "A linear-time regular expression engine, built test-first"
+
+sourcedir = "src"
+
+modules = Regex.Core

@@ -2,6 +2,7 @@
 build/
 *.ttc
 *.ttm
+regex/tests/depends/
 
 # Node
 node_modules/

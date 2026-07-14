@@ -1,0 +1,11 @@
+package regex-tests
+version = 0.1.0
+
+depends = regex
+
+sourcedir = "src"
+main = Main
+executable = tests
+
+modules = Main
+        , Harness
