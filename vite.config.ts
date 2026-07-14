@@ -120,15 +120,20 @@ const customCss = `
   * { box-shadow: none !important; text-shadow: none !important; }
   .content a { text-decoration: underline; text-underline-offset: 2px; }
   .content h1, .content h2, .content h3 { letter-spacing: -0.01em; }
-  .ox-callout {
-    border: 1px solid var(--octc-color-border);
-    background: var(--octc-color-bg-alt);
-    border-radius: 0;
-  }
   .content blockquote {
     border-left: none;
     padding-left: 0;
     color: var(--octc-color-text-muted);
+  }
+  .content blockquote.ox-callout {
+    border: 1px solid var(--octc-color-border);
+    background: var(--octc-color-bg-alt);
+    border-radius: 0;
+    padding: 0.875rem 1rem;
+    color: var(--octc-color-text);
+  }
+  .toc-link, .toc-link:hover, .toc-link.active {
+    border-left: none;
   }
   #lang-switch {
     font-size: 13px;
