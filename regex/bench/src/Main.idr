@@ -52,9 +52,9 @@ covering
 main : IO ()
 main = do
   putStrLn "(a?){n}a{n} against a^n — both engines"
-  traverse_ race [10, 14, 18, 22]
+  traverse_ race [10, 12, 14, 16, 18, 20]
   putStrLn ""
   putStrLn "derivatives only, larger n"
   traverse_ (\n => timed ("n = " ++ show n)
                          (matches (evil n) (input n)))
-            [100, 200, 400]
+            [50, 100, 200]

@@ -21,14 +21,16 @@ Read the book, or jump straight into the code:
 
 ```sh
 cd regex
-idris2 --build tests/tests.ipkg && ./tests/build/exec/tests
+make test    # build the library and run the whole suite
+make bench   # race the derivative engine against a backtracker
 ```
 
 To run the book locally:
 
 ```sh
 pnpm install
-pnpm dev
+pnpm dev       # English
+pnpm dev:ja    # 日本語
 ```
 
 ## License
