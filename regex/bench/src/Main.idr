@@ -25,6 +25,14 @@ evil n = cat (exactly n (opt (lit 'a'))) (exactly n (lit 'a'))
 input : Nat -> String
 input n = pack (replicate n 'a')
 
+||| A fixed, friendly pattern: (a|b)*c.
+fixed : Regex
+fixed = cat (star (alt (lit 'a') (lit 'b'))) (lit 'c')
+
+||| n a's followed by a single c.
+inputC : Nat -> String
+inputC n = pack (replicate n 'a' ++ ['c'])
+
 ||| A duration in milliseconds.
 ms : Clock Duration -> Double
 ms c = cast (seconds c) * 1000 + cast (nanoseconds c) / 1000000
@@ -54,7 +62,7 @@ main = do
   putStrLn "(a?){n}a{n} against a^n — both engines"
   traverse_ race [10, 12, 14, 16, 18, 20]
   putStrLn ""
-  putStrLn "derivatives only, larger n"
-  traverse_ (\n => timed ("n = " ++ show n)
-                         (matches (evil n) (input n)))
-            [50, 100, 200]
+  putStrLn "fixed pattern (a|b)*c, growing input — derivatives only"
+  traverse_ (\n => timed ("length = " ++ show (S n))
+                         (matches fixed (inputC n)))
+            [9999, 99999, 999999]
