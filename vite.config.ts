@@ -86,10 +86,13 @@ const sidebar = toc.map((part) => ({
 // TextMate grammar is close enough to lex Idris 2 sources).
 // ---------------------------------------------------------------------------
 
+// The Haskell TextMate grammar is close enough to lex Idris 2 sources.
+// (The alias list must not contain the name itself — shiki treats that
+// as a circular alias.)
 const idris = {
   ...haskell[0],
   name: "idris",
-  aliases: ["idris", "idris2"],
+  aliases: ["idris2"],
 };
 
 const monoHighlight = {
