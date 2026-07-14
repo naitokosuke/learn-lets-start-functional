@@ -33,6 +33,13 @@ pnpm dev       # English
 pnpm dev:ja    # 日本語
 ```
 
+## Deploying
+
+The book deploys to [Void](https://void.cloud/) from GitHub Actions using OIDC — no long-lived secret. One-time setup:
+
+1. `pnpm exec void init` locally (log in and link/create the project).
+2. Set the repository variable `VOID_PROJECT` to the project slug — the [Deploy workflow](./.github/workflows/deploy.yml) switches on automatically from the next push to `main`.
+
 ## License
 
 [MIT](./LICENSE)
