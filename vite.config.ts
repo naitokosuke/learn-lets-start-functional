@@ -74,10 +74,13 @@ const toc: Part[] = [
   },
 ];
 
+// Chapter numbers come from the file names (01-…, 02-…): showing
+// them in the sidebar makes the book's reading order visible at a
+// glance, on the site and in the repository alike.
 const sidebar = toc.map((part) => ({
   text: part[locale],
   items: part.items.map((ch) => ({
-    text: ch[locale],
+    text: `${ch.slug.slice(0, 2)} · ${ch[locale]}`,
     link: `/${ch.slug}.md`,
   })),
 }));
@@ -151,6 +154,20 @@ const customCss = `
   .toc-link, .toc-link:hover, .toc-link.active {
     border-left: none;
   }
+  /* sidebar: the default active state is a near-invisible tint —
+     invert instead: unmistakable in both light and dark, still flat */
+  .nav-link.active, .nav-link.active:hover {
+    background: var(--octc-color-text);
+    color: var(--octc-color-bg);
+    font-weight: 600;
+  }
+  /* separate the book's parts with a quiet horizontal rule */
+  .nav-section + .nav-section {
+    margin-top: 1.1rem;
+    padding-top: 1.1rem;
+    border-top: 1px solid var(--octc-color-border);
+  }
+  .nav-title { margin-bottom: 0.55rem; }
   #lang-switch {
     font-size: 13px;
     color: var(--octc-color-text-muted);
@@ -213,6 +230,7 @@ export default defineConfig({
       search: { enabled: true, hotkey: "/" },
       ssg: {
         siteName: "Let's Start Functional",
+        siteUrl: "https://lets-start-functional.void.app",
         theme: defineTheme({
           extends: defaultTheme,
           entryPage: { mode: "subtle" },
@@ -254,7 +272,15 @@ export default defineConfig({
             github: "https://github.com/ubugeeei-prod/lets-start-functional",
           },
           embed: {
-            head: `<link rel="icon" type="image/svg+xml" href="${isJa ? "/ja" : ""}/favicon.svg" />`,
+            head: [
+              `<link rel="icon" type="image/svg+xml" href="${isJa ? "/ja" : ""}/favicon.svg" />`,
+              // og:image must be an absolute URL — relative paths are
+              // ignored by most scrapers.
+              `<meta property="og:image" content="https://lets-start-functional.void.app/og.png" />`,
+              `<meta property="og:image:width" content="1200" />`,
+              `<meta property="og:image:height" content="630" />`,
+              `<meta name="twitter:image" content="https://lets-start-functional.void.app/og.png" />`,
+            ].join("\n"),
             headerAfter: `<a id="lang-switch" href="${isJa ? "/" : "/ja/"}">${isJa ? "English" : "日本語"}</a>`,
           },
           css: customCss,
