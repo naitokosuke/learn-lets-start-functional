@@ -52,7 +52,7 @@ One line. You are not supposed to be able to read it yet — that is what the bo
 
 And here is the finished engine doing its job, in an interactive session against the repository as it stands today (once you have cloned it — command below — this is `make repl` in the `regex/` directory):
 
-```
+```repl
 Main> :module Regex
 Imported module Regex
 Main> :exec printLn (test "colou?r" "my favourite colour")

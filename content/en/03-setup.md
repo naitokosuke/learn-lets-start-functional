@@ -53,14 +53,14 @@ Main>
 
 The prompt is `Main> `. It evaluates expressions:
 
-```
+```repl
 Main> 2 + 2
 4
 ```
 
 Commands starting with a colon talk to the REPL itself rather than evaluating code. The one you will use constantly is `:t`, which asks for the type of an expression:
 
-```
+```repl
 Main> :t "hello"
 fromString "hello" : String
 ```
@@ -69,7 +69,7 @@ Type on the right of the colon: `"hello"` is a `String`. (The `fromString` on th
 
 Now a small surprise that teaches a big lesson. Try to print something:
 
-```
+```repl
 Main> putStrLn "hello"
 Error: Can't find an implementation for HasIO ?io.
 
@@ -80,14 +80,14 @@ Error: Can't find an implementation for HasIO ?io.
 
 The REPL *evaluates* expressions; it does not *run* them, and `putStrLn "hello"` is not a string that got printed — it is a description of an action. (The error is the REPL failing to guess which flavor of runnable context you meant; the distinction between describing an effect and performing one is a theme we will develop properly later.) To actually perform an action, ask with `:exec`:
 
-```
+```repl
 Main> :exec putStrLn "hello"
 hello
 ```
 
 And to leave:
 
-```
+```repl
 Main> :q
 Bye for now!
 ```
@@ -140,7 +140,7 @@ Do not be alarmed that the finished thing has ten source modules — remember, t
 
 Idris projects are described by `.ipkg` files. Here is [regex/regex.ipkg](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/regex.ipkg), in full:
 
-```
+```ipkg
 package regex
 version = 0.1.0
 authors = "ubugeeei"

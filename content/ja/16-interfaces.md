@@ -47,7 +47,7 @@ interface Semigroup ty => Monoid ty where
 
 モノイドなら、あなたはすでにいくつも知っています。文字列は、連結を演算に、`""` を単位元にしてモノイドです:
 
-```
+```repl
 Main> "fun" <+> "ctional"
 "functional"
 Main> the String neutral

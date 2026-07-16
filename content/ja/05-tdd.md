@@ -163,7 +163,7 @@ main = runSpecs sanitySpecs
 
 パッケージファイル `tests/tests.ipkg` は、[環境構築の章](./03-setup.md)で予告したとおりです。
 
-```
+```ipkg
 package regex-tests
 version = 0.1.0
 

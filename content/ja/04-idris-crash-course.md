@@ -13,7 +13,7 @@ description: 本書の残りを読むのに必要なぶんだけの Idris 2 を�
 
 `:t` コマンドは何の型でも教えてくれます。あなたの Idris 人生で最も多く発することになる質問です。
 
-```
+```repl
 Scratch> :t 42
 42 : Integer
 Scratch> :t 3.14
@@ -26,7 +26,7 @@ fromChar 'x' : Char
 
 これから繰り返し登場する、初対面かもしれない型が 1 つあります。`Nat`——自然数、つまりゼロ以上の整数で、*負の数はありません*。Idris は、負の値がナンセンスになる場所すべてで `Nat` を使います。長さ、個数、インデックス。リテラルを特定の型に寄せたいときは `the` を使います。
 
-```
+```repl
 Scratch> the Nat 3
 3
 Scratch> the Nat 3 - the Nat 5
@@ -46,21 +46,21 @@ double x = x + x
 
 2 行、そしていつでもこの 2 行です。*型シグネチャ*が単独の行に——`double` は `Integer` を受け取り `Integer` を返す——続いて定義。`return` キーワードはありません。`=` の右辺が*そのまま*結果です。ここでの関数はまさに数学のそれだからです。同じ入力なら同じ出力、脇で起きることは何もなし。
 
-```
+```repl
 Scratch> double 21
 42
 ```
 
 適用の構文に注目してください。`double 21`——引数を囲む括弧はありません。複数引数の関数は、矢印を重ねるだけです。標準ライブラリの `Nat` の足し算を見てみましょう。
 
-```
+```repl
 Scratch> :t plus
 Prelude.plus : Nat -> Nat -> Nat
 ```
 
 `Nat -> Nat -> Nat` は「`Nat` を受け取り、さらに `Nat` を受け取り、`Nat` を返す」と読みます。矢印は読んだとおりの順に結合し、そこから愉快なことが転がり出てきます。2 引数の関数を*1 個の*引数に適用して、関数を返してもらえるのです。
 
-```
+```repl
 Scratch> :t plus 1
 plus 1 : Nat -> Nat
 ```
@@ -79,7 +79,7 @@ length' (first :: rest) = 1 + length' rest
 
 等式が 2 本、リストの取りうる形ごとに 1 本ずつ。空リスト `[]` の長さはゼロ。先頭要素と残りから組み立てられたリスト(`::` は「コンス」と読みます)の長さは、残りの長さより 1 大きい。ループはありません——構造に対する再帰が歩いてくれます。`List a` の小文字の `a` は、この関数が*何の*リストにも働くという意味です。`a` は型変数です。(Rust 勢へ:`Vec<T>` の `T` です。山括弧がないだけ。)
 
-```
+```repl
 Scratch> length' [10, 20, 30]
 3
 ```
@@ -100,7 +100,7 @@ flipCoin Tails = Heads
 
 `Coin` はちょうど 2 つの値を持つ、真新しい型です。`Heads` と `Tails` は*コンストラクタ*と呼ばれ、パターンマッチはリストのときと同様に働きます。
 
-```
+```repl
 Scratch> flipCoin Heads
 Tails
 ```
@@ -113,7 +113,7 @@ data Perhaps a = Nope | Yep a
 
 `Perhaps Integer` は `Nope` か、あるいは `Yep 42`——本物の `Integer` を包んだ `Yep`——のどちらかです。そしてここで種明かし。これは自分で定義する必要がありませんでした。この言語で一番よく使われるデータ型として、`Maybe` という名前ですでに存在しているからです。
 
-```
+```repl
 Scratch> :t Just
 Prelude.Just : ty -> Maybe ty
 ```
@@ -124,14 +124,14 @@ Prelude.Just : ty -> Maybe ty
 
 リストリテラルと `::` はもう見ました。実は同じものです。
 
-```
+```repl
 Scratch> 1 :: 2 :: 3 :: []
 [1, 2, 3]
 ```
 
 他の言語ならループを書くようなリスト仕事のほとんどは、3 つの関数がこなします。`map` は各要素に関数を適用し、`filter` はテストに合格した要素を残し、`foldr` は全要素を演算子で束ねます。
 
-```
+```repl
 Scratch> map (* 2) [1, 2, 3]
 [2, 4, 6]
 Scratch> filter (> 10) [4, 25, 7, 90]
@@ -144,7 +144,7 @@ Scratch> foldr (+) 0 [1, 2, 3, 4]
 
 絶えず必要になる、文字列固有の事実を 1 つ。`String` は `List Char` ではありませんが、変換は 2 つの関数、`unpack` と `pack` で済みます。
 
-```
+```repl
 Scratch> unpack "abc"
 ['a', 'b', 'c']
 Scratch> pack ['f', 'u', 'n']
@@ -174,7 +174,7 @@ distance p q =
   in sqrt (dx * dx + dy * dy)
 ```
 
-```
+```repl
 Scratch> distance (MkPoint 0 0) (MkPoint 3 4)
 5.0
 ```
@@ -204,7 +204,7 @@ swap (first, second) = ?whats_this
 
 これが*コンパイルを通ります*。ファイルはロードされ、ホールを尋問できるようになります。
 
-```
+```repl
 Scratch> :t whats_this
  0 b : Type
  0 a : Type
@@ -237,7 +237,7 @@ firstChar str =
 
 (`case ... of` は式の途中でのパターンマッチ。`_` は「何でもいい」のワイルドカードです。)
 
-```
+```repl
 Scratch> firstChar "idris"
 Just 'i'
 Scratch> firstChar ""
@@ -250,7 +250,7 @@ Nothing
 
 コインを 2 枚、比べてみましょう。
 
-```
+```repl
 Scratch> Heads == Heads
 Error: Can't find an implementation for Eq Coin.
 ```
@@ -264,7 +264,7 @@ Eq Coin where
   _     == _     = False
 ```
 
-```
+```repl
 Scratch> Heads == Heads
 True
 ```

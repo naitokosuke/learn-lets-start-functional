@@ -113,7 +113,7 @@ data Regex : Type where
 
 コードの多くが `|||` のドキュメントコメント(doc comment)であることに注目してください。これは意図的なもので、盗む価値のある習慣です。doc コメントはコードの*次の読者*のために書くものです——こういうプロジェクトでは、それはたいてい 3 週間後のあなた自身です。Idris は doc コメントをプログラムの一部として扱います。REPL に尋ねれば、そのまま返してくれます。
 
-```
+```repl
 Main> :doc Regex
 data Regex.Core.Regex : Type
   The abstract syntax of regular expressions.

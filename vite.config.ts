@@ -2,6 +2,8 @@ import { defineConfig } from "vite-plus";
 import { oxContent, defineTheme, defaultTheme } from "@ox-content/vite-plugin";
 import githubDarkDefault from "shiki/themes/github-dark-default.mjs";
 import idrisGrammar from "./syntaxes/idris.tmLanguage.json";
+import ipkgGrammar from "./syntaxes/ipkg.tmLanguage.json";
+import idrisReplGrammar from "./syntaxes/idris-repl.tmLanguage.json";
 
 // ---------------------------------------------------------------------------
 // Locale — the site is built twice: English at "/", Japanese at "/ja/".
@@ -102,6 +104,13 @@ const idris = {
   name: "idris",
   aliases: ["idris2"],
 };
+
+// Package files and REPL transcripts get their own small grammars.
+// The REPL grammar highlights the prompt, REPL :commands, and the
+// typed expression (by embedding source.idris); output lines stay
+// plain, error lines go red.
+const ipkg = { ...ipkgGrammar, name: "ipkg" };
+const idrisRepl = { ...idrisReplGrammar, name: "idris-repl", aliases: ["repl"] };
 
 // Real syntax colors for code, on a near-black flat background that
 // sits quietly inside the otherwise monochrome design.
@@ -228,7 +237,7 @@ export default defineConfig({
       base: isJa ? "/ja/" : "/",
       highlight: true,
       highlightTheme: codeTheme,
-      highlightLangs: [idris],
+      highlightLangs: [idris, ipkg, idrisRepl],
       docs: false,
       search: { enabled: true, hotkey: "/" },
       ssg: {

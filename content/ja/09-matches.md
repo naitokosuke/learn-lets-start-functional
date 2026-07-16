@@ -151,7 +151,7 @@ make test
 
 スイートは green ですが、自分の手でいろいろマッチさせてみるのに勝るものはありません。`regex/` ディレクトリで `make repl`(または `idris2 --repl regex.ipkg`)を実行すると、ライブラリを読み込んだ状態の REPL が開きます。
 
-```
+```repl
 Main> :module Regex.Core
 Imported module Regex.Core
 Main> :let r = Cat (Star (Alt (Lit 'a') (Lit 'b'))) (Lit 'c')

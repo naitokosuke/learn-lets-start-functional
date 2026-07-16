@@ -47,7 +47,7 @@ interface Semigroup ty => Monoid ty where
 
 You know several monoids already. Strings, under concatenation, with `""` as neutral:
 
-```
+```repl
 Main> "fun" <+> "ctional"
 "functional"
 Main> the String neutral

@@ -163,7 +163,7 @@ Because specs are data, a spec *suite* is a `List Spec`, and composing suites is
 
 The package file, `tests/tests.ipkg`, as promised in the [setup chapter](./03-setup.md):
 
-```
+```ipkg
 package regex-tests
 version = 0.1.0
 

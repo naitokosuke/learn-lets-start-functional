@@ -13,7 +13,7 @@ Open a terminal, create an empty file called `Scratch.idr` containing just the l
 
 The `:t` command tells you the type of anything, and it is the question you will ask most in your Idris career:
 
-```
+```repl
 Scratch> :t 42
 42 : Integer
 Scratch> :t 3.14
@@ -26,7 +26,7 @@ Read `42 : Integer` as "42 has type Integer". (The `fromChar` noise is Idris sho
 
 One type will keep appearing that you may not have met: `Nat`, the natural numbers — whole numbers from zero up, *with no negatives*. Idris uses `Nat` wherever negative values would be nonsense: lengths, counts, indices. You can nudge a literal into a particular type with `the`:
 
-```
+```repl
 Scratch> the Nat 3
 3
 Scratch> the Nat 3 - the Nat 5
@@ -46,21 +46,21 @@ double x = x + x
 
 Two lines, and they are always these two lines: the *type signature* on its own line — `double` takes an `Integer` and returns an `Integer` — then the definition. No `return` keyword; the right-hand side of `=` *is* the result, because a function here is exactly the mathematical kind: same input, same output, nothing else happening on the side.
 
-```
+```repl
 Scratch> double 21
 42
 ```
 
 Note the application syntax: `double 21`, no parentheses around arguments. Multi-argument functions just stack arrows. Here is the standard library's addition on `Nat`:
 
-```
+```repl
 Scratch> :t plus
 Prelude.plus : Nat -> Nat -> Nat
 ```
 
 Read `Nat -> Nat -> Nat` as "takes a `Nat`, then takes a `Nat`, then gives a `Nat`". The arrows associate the way they read, and something delightful falls out: you can apply a two-argument function to *one* argument and get a function back.
 
-```
+```repl
 Scratch> :t plus 1
 plus 1 : Nat -> Nat
 ```
@@ -79,7 +79,7 @@ length' (first :: rest) = 1 + length' rest
 
 Two equations, one per possible shape of list: the empty list `[]` has length zero, and a list built from a first element and a rest (`::` is pronounced "cons") has length one more than the rest. There is no loop — recursion on the structure does the walking. The lowercase `a` in `List a` means the function works on lists of *anything*; `a` is a type variable. (Rust folks: it is `Vec<T>`'s `T`, without the angle brackets.)
 
-```
+```repl
 Scratch> length' [10, 20, 30]
 3
 ```
@@ -100,7 +100,7 @@ flipCoin Tails = Heads
 
 `Coin` is a brand-new type with exactly two values. `Heads` and `Tails` are called *constructors*, and pattern matching works on them just like on lists:
 
-```
+```repl
 Scratch> flipCoin Heads
 Tails
 ```
@@ -113,7 +113,7 @@ data Perhaps a = Nope | Yep a
 
 A `Perhaps Integer` is either `Nope`, or `Yep 42` — a `Yep` wrapping an actual `Integer`. Now the reveal: you did not need to define this, because it is the single most-used data type in the language, under the name `Maybe`:
 
-```
+```repl
 Scratch> :t Just
 Prelude.Just : ty -> Maybe ty
 ```
@@ -124,14 +124,14 @@ Prelude.Just : ty -> Maybe ty
 
 You have seen list literals and `::`. They are the same thing:
 
-```
+```repl
 Scratch> 1 :: 2 :: 3 :: []
 [1, 2, 3]
 ```
 
 Three functions do most of the list work you would write loops for elsewhere. `map` applies a function to every element, `filter` keeps the elements passing a test, and `foldr` combines all the elements with an operator:
 
-```
+```repl
 Scratch> map (* 2) [1, 2, 3]
 [2, 4, 6]
 Scratch> filter (> 10) [4, 25, 7, 90]
@@ -144,7 +144,7 @@ The `(* 2)` and `(> 10)` are *operator sections* — partial application again, 
 
 One string-specific fact you will need constantly: a `String` is not a `List Char`, but converting is two functions, `unpack` and `pack`:
 
-```
+```repl
 Scratch> unpack "abc"
 ['a', 'b', 'c']
 Scratch> pack ['f', 'u', 'n']
@@ -174,7 +174,7 @@ distance p q =
   in sqrt (dx * dx + dy * dy)
 ```
 
-```
+```repl
 Scratch> distance (MkPoint 0 0) (MkPoint 3 4)
 5.0
 ```
@@ -204,7 +204,7 @@ swap (first, second) = ?whats_this
 
 This *compiles*. The file loads. And now you can interrogate the hole:
 
-```
+```repl
 Scratch> :t whats_this
  0 b : Type
  0 a : Type
@@ -237,7 +237,7 @@ firstChar str =
 
 (`case ... of` is pattern matching mid-expression; the `_` is a wildcard for "don't care".)
 
-```
+```repl
 Scratch> firstChar "idris"
 Just 'i'
 Scratch> firstChar ""
@@ -250,7 +250,7 @@ The return type `Maybe Char` is an honest contract: you might not get a `Char`, 
 
 Try comparing two coins:
 
-```
+```repl
 Scratch> Heads == Heads
 Error: Can't find an implementation for Eq Coin.
 ```
@@ -264,7 +264,7 @@ Eq Coin where
   _     == _     = False
 ```
 
-```
+```repl
 Scratch> Heads == Heads
 True
 ```

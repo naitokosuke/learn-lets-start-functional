@@ -1,0 +1,21 @@
+{
+  "name": "ipkg",
+  "scopeName": "source.ipkg",
+  "fileTypes": ["ipkg"],
+  "patterns": [
+    { "name": "comment.line.double-dash.ipkg", "match": "--.*$" },
+    {
+      "name": "string.quoted.double.ipkg",
+      "begin": "\"",
+      "end": "\"",
+      "patterns": [{ "name": "constant.character.escape.ipkg", "match": "\\\\." }]
+    },
+    {
+      "name": "keyword.control.ipkg",
+      "match": "^(package|version|authors|maintainers|license|brief|readme|homepage|sourceloc|bugtracker|langversion|depends|modules|main|executable|opts|sourcedir|builddir|outputdir|prebuild|postbuild|preinstall|postinstall|preclean|postclean)\\b"
+    },
+    { "name": "entity.name.type.ipkg", "match": "\\b[A-Z][a-zA-Z0-9_.']*" },
+    { "name": "constant.numeric.ipkg", "match": "\\b[0-9]+(\\.[0-9]+)*\\b" },
+    { "name": "keyword.operator.ipkg", "match": ">=|<=|==|=|," }
+  ]
+}

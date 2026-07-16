@@ -151,7 +151,7 @@ make test
 
 The suite is green, but nothing beats matching things with your own hands. From the `regex/` directory, `make repl` (or `idris2 --repl regex.ipkg`) opens a REPL with the library loaded:
 
-```
+```repl
 Main> :module Regex.Core
 Imported module Regex.Core
 Main> :let r = Cat (Star (Alt (Lit 'a') (Lit 'b'))) (Lit 'c')

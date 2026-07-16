@@ -53,14 +53,14 @@ Main>
 
 プロンプトは `Main> ` です。式を評価してくれます。
 
-```
+```repl
 Main> 2 + 2
 4
 ```
 
 コロンで始まるコマンドは、コードの評価ではなく REPL 自体への指示です。あなたが使い倒すことになるのが `:t`、式の型を尋ねるコマンドです。
 
-```
+```repl
 Main> :t "hello"
 fromString "hello" : String
 ```
@@ -69,7 +69,7 @@ fromString "hello" : String
 
 さて、大きな教訓をくれる小さなサプライズです。何かを表示させてみましょう。
 
-```
+```repl
 Main> putStrLn "hello"
 Error: Can't find an implementation for HasIO ?io.
 
@@ -80,14 +80,14 @@ Error: Can't find an implementation for HasIO ?io.
 
 REPL は式を*評価*しますが、*実行*はしません。そして `putStrLn "hello"` は表示された文字列ではなく——アクションの記述なのです。(このエラーは、どの種類の実行可能コンテキストのつもりなのか REPL が推測しかねた、というものです。作用を記述することと実行することの区別は、のちほどきちんと掘り下げるテーマです。)実際にアクションを実行するには、`:exec` で頼みます。
 
-```
+```repl
 Main> :exec putStrLn "hello"
 hello
 ```
 
 そして帰り道はこちら。
 
-```
+```repl
 Main> :q
 Bye for now!
 ```
@@ -140,7 +140,7 @@ regex/
 
 Idris のプロジェクトは `.ipkg` ファイルで記述されます。こちらが [regex/regex.ipkg](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/regex.ipkg) の全文です。
 
-```
+```ipkg
 package regex
 version = 0.1.0
 authors = "ubugeeei"

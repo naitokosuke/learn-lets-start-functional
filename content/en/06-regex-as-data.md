@@ -113,7 +113,7 @@ This is an algebraic data type, exactly like the ones from the [crash course](./
 
 Notice how much of the code is `|||` doc comments. That is deliberate, and it is a habit worth stealing: doc comments are written for the *next reader* of the code — which, in a project like this, is usually you in three weeks. Idris treats them as part of the program. Ask the REPL and it will serve them back:
 
-```
+```repl
 Main> :doc Regex
 data Regex.Core.Regex : Type
   The abstract syntax of regular expressions.

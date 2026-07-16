@@ -52,7 +52,7 @@ matches r s = nullable (foldl (flip deriv) r (unpack s))
 
 そしてこちらが、完成したエンジンが仕事をしている様子——今日のリポジトリそのままの状態に対する対話セッションです(クローンしたら——コマンドは後述——`regex/` ディレクトリで `make repl` を実行するとこうなります)。
 
-```
+```repl
 Main> :module Regex
 Imported module Regex
 Main> :exec printLn (test "colou?r" "my favourite colour")
