@@ -1,23 +1,23 @@
 ---
 title: "Capstone: A Lexer"
-description: Everything composes into a real tool — a maximal-munch lexer where advancing every rule by one character means deriving every rule by one character.
+description: Everything composes into a real tool, a maximal-munch lexer where advancing every rule by one character means deriving every rule by one character.
 ---
 
 # Capstone: A Lexer
 
-One chapter of engine left in us, and we spend it building something real on top: a lexer — the first stage of every compiler — in about a screen of code, powered by everything the book has built.
+One chapter of engine left in us, and we spend it building something real on top: a lexer, the first stage of every compiler, in about a screen of code, powered by everything the book has built.
 
 ## What a lexer is
 
-Before a compiler can parse `1 + 2*x`, it chops the text into **tokens**: a number `1`, whitespace, a plus sign, and so on. That chopper is the lexer (or tokenizer), and it is traditionally specified as a table of rules — one regex per token kind.
+Before a compiler can parse `1 + 2*x`, it chops the text into **tokens**: a number `1`, whitespace, a plus sign, and so on. That chopper is the lexer (or tokenizer), and it is traditionally specified as a table of rules, one regex per token kind.
 
-The strategy that makes the table unambiguous is called **maximal munch**: at each position, take the *longest* match any rule can make; when two rules tie, the one listed *first* wins. Both halves matter. Longest-match is why `12foo` lexes as one identifier rather than the number `12` followed by `foo` — and, in real languages, why `>=` is one operator instead of two. First-rule-wins is how every language handles keywords: `if` matches both the keyword rule and the identifier rule at the same length, and the keyword rule wins purely by sitting higher in the table.
+The strategy that makes the table unambiguous is called **maximal munch**: at each position, take the *longest* match any rule can make; when two rules tie, the one listed *first* wins. Both halves matter. Longest-match is why `12foo` lexes as one identifier rather than the number `12` followed by `foo` (and, in real languages, why `>=` is one operator instead of two). First-rule-wins is how every language handles keywords: `if` matches both the keyword rule and the identifier rule at the same length, and the keyword rule wins purely by sitting higher in the table.
 
-Here is the payoff moment for the whole book: to run many regexes in lockstep across the input, a backtracking matcher has real trouble — but with derivatives, *advancing every rule by one character just means deriving every rule by one character*. Regexes are values; a rule table is a `List`; lexing is a fold. Watch.
+Here is the payoff moment for the whole book. Running many regexes in lockstep across the input gives a backtracking matcher real trouble, but with derivatives, *advancing every rule by one character just means deriving every rule by one character*. Regexes are values; a rule table is a `List`; lexing is a fold. Watch.
 
 ## Red: the rules of the game
 
-Commit [b057007](https://github.com/ubugeeei-prod/lets-start-functional/commit/b057007416f97d6d479907844363c104ed976bf1) adds [`regex/tests/src/Spec/Lex.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/src/Spec/Lex.idr). First, token kinds for a tiny calculator language — with `Eq` and `Show` written by hand, which after [A Regex Is Data](./06-regex-as-data.md) is pure routine:
+Commit [b057007](https://github.com/ubugeeei-prod/lets-start-functional/commit/b057007416f97d6d479907844363c104ed976bf1) adds [`regex/tests/src/Spec/Lex.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/src/Spec/Lex.idr). First, token kinds for a tiny calculator language, with `Eq` and `Show` written by hand, which after [A Regex Is Data](./06-regex-as-data.md) is pure routine:
 
 ```idris
 ||| Token kinds for a tiny calculator language.
@@ -65,7 +65,7 @@ rules =
   ]
 ```
 
-And the specs — maximal munch, the tie-break, failure, and one last point about design:
+And the specs: maximal munch, the tie-break, failure, and one last point about design.
 
 ```idris
 ||| Shorthand for expected tokens.
@@ -113,7 +113,7 @@ Error: Module Regex.Lex not found
 
 ## Green: the lexer
 
-Commit [d551858](https://github.com/ubugeeei-prod/lets-start-functional/commit/d55185805c8cb5a4d4a7137d74cee33b91785bbb) adds [`regex/src/Regex/Lex.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Lex.idr). (It also adds one missing `import Data.Maybe` to the spec itself — `fromMaybe` lives there, not in the prelude. Even specs get fixes.) The token type is a record, generic in the kind:
+Commit [d551858](https://github.com/ubugeeei-prod/lets-start-functional/commit/d55185805c8cb5a4d4a7137d74cee33b91785bbb) adds [`regex/src/Regex/Lex.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Lex.idr). (It also adds one missing `import Data.Maybe` to the spec itself; `fromMaybe` lives there, not in the prelude. Even specs get fixes.) The token type is a record, generic in the kind:
 
 ```idris
 ||| A token: which rule fired, and the exact text it consumed.
@@ -134,9 +134,9 @@ Eq k => Eq (Token k) where
   t1 == t2 = t1.kind == t2.kind && t1.text == t2.text
 ```
 
-Look at those implementation headers: `Show k => Show (Token k)`. An implementation can *require other implementations* — a `Token k` knows how to print itself exactly when its kind does. Small, but lovely: it is the same constraint arrow from every function signature, now appearing on an implementation, and it is how `Show` for lists, pairs and `Maybe` has worked under your feet all along.
+Look at those implementation headers: `Show k => Show (Token k)`. An implementation can *require other implementations*; a `Token k` knows how to print itself exactly when its kind does. Small, but lovely: it is the same constraint arrow from every function signature, now appearing on an implementation, and it is how `Show` for lists, pairs and `Maybe` has worked under your feet all along.
 
-Then the machinery — three short functions:
+Then the machinery, three short functions:
 
 ```idris
 ||| The first rule whose regex accepts right now, if any.
@@ -174,7 +174,7 @@ longest rules cs sofar best =
            else longest (step c rules) rest (S sofar) best'
 ```
 
-Maximal munch, made literal: keep deriving, and every time some rule's regex is `nullable` — accepting, right here — overwrite `best` with the current position. When the input runs out, or every rule has died, the last remembered accept is the longest match. The early exit deserves a nod: a rule that can no longer match anything has derived to *literally* `Fail` — not to some sprawling tree that happens to be unsatisfiable — because the smart constructors from [Smart Constructors](./10-smart-constructors.md) collapse dead branches on the spot. That is why a simple `== Fail` check suffices to notice the whole table is dead.
+Maximal munch, made literal: keep deriving, and every time some rule's regex is `nullable` (accepting, right here), overwrite `best` with the current position. When the input runs out, or every rule has died, the last remembered accept is the longest match. The early exit deserves a nod: a rule that can no longer match anything has derived to *literally* `Fail`, not to some sprawling tree that happens to be unsatisfiable, because the smart constructors from [Smart Constructors](./10-smart-constructors.md) collapse dead branches on the spot. That is why a simple `== Fail` check suffices to notice the whole table is dead.
 
 Finally, the driver:
 
@@ -204,7 +204,7 @@ tokenize rules s = loop (unpack s)
           map (MkToken k (pack consumed) ::) (loop (assert_smaller cs rest))
 ```
 
-Two guards worth reading twice. `Just (_, Z) => Nothing` rejects zero-length matches: a rule like `pat "a*"` accepts the empty string at every position, and a lexer that emits infinitely many empty tokens is not a lexer. And `assert_smaller` is a new honesty annotation: this module is `%default total`, but the totality checker cannot see that `rest` — produced by `splitAt` — is a strict suffix of `cs`. *We* can: the `S len` pattern guarantees at least one character was consumed. `assert_smaller cs rest` is the escape hatch where the programmer signs their name to exactly that claim. Used once, with a comment, for a reason we can articulate — like `covering` before it, the annotation does not weaken the code so much as document precisely where trust enters.
+Two guards worth reading twice. `Just (_, Z) => Nothing` rejects zero-length matches: a rule like `pat "a*"` accepts the empty string at every position, and a lexer that emits infinitely many empty tokens is not a lexer. And `assert_smaller` is a new honesty annotation: this module is `%default total`, but the totality checker cannot see that `rest`, produced by `splitAt`, is a strict suffix of `cs`. *We* can: the `S len` pattern guarantees at least one character was consumed. `assert_smaller cs rest` is the escape hatch where the programmer signs their name to exactly that claim. Used once, with a comment, for a reason we can articulate. Like `covering` before it, the annotation does not weaken the code so much as document precisely where trust enters.
 
 ```sh
 make test
@@ -228,15 +228,15 @@ make test
 
 ## The property that composes
 
-One closing flourish. The lexer never backtracks — not because we were careful, but because it *cannot*: its only engine operations are `deriv` and `nullable`, each rule advances exactly once per input character, and `tokenize` never revisits consumed text. Lexing a string of length n with m rules costs n derivative steps per rule, full stop, whatever the rules are. The linear-time property we built into the engine did not merely survive being built upon — it composed. That is the quiet thesis of this whole book: get the core right, make everything data and functions, and the good properties travel upward for free.
+One closing observation. The lexer never backtracks, not because we were careful, but because it *cannot*: its only engine operations are `deriv` and `nullable`, each rule advances exactly once per input character, and `tokenize` never revisits consumed text. Lexing a string of length n with m rules costs n derivative steps per rule, whatever the rules are. The linear-time property we built into the engine did not merely survive being built upon; it composed. That is the quiet thesis of this whole book: get the core right, make everything data and functions, and the good properties travel upward for free.
 
 ## Summary
 
-- A lexer turns text into tokens using a rule table — one regex per token kind — under maximal munch: longest match wins, ties go to the earlier rule (which is how keywords beat identifiers).
-- With regexes as values, the rule table is a `List (k, Regex)`, and advancing every rule is `map (deriv c)` — one line.
+- A lexer turns text into tokens using a rule table (one regex per token kind) under maximal munch: longest match wins, ties go to the earlier rule (which is how keywords beat identifiers).
+- With regexes as values, the rule table is a `List (k, Regex)`, and advancing every rule is `map (deriv c)`, one line.
 - `longest` walks forward remembering the last accept; dead rules collapse to literal `Fail` thanks to smart constructors, so `== Fail` gives an early exit.
-- `tokenize` rejects zero-length matches, and uses `assert_smaller` — an honesty annotation, used once and justified in a comment — to tell the totality checker that consumed input shrinks.
+- `tokenize` rejects zero-length matches, and uses `assert_smaller` (an honesty annotation, used once and justified in a comment) to tell the totality checker that consumed input shrinks.
 - Interface implementations can be constrained (`Show k => Show (Token k)`), and dropping whitespace is `filter`, because tokens are plain data.
 - The lexer inherits linearity from the engine: no rule ever backtracks, so the capstone runs in one pass, always.
 
-The engine is finished, raced, proven and put to work. All that remains is to look at what you have built — and where to take it. On to [What's Next](./21-whats-next.md).
+The engine is finished, raced, proven and put to work. All that remains is to look at what you have built, and where to take it. On to [What's Next](./21-whats-next.md).

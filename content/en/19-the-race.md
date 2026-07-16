@@ -1,15 +1,15 @@
 ---
 title: "The Race: Linear vs Backtracking"
-description: We build the backtracking rival, race it against the derivative engine — and the first benchmark run kills the wrong contestant.
+description: We build the backtracking rival and race it against the derivative engine. The first benchmark run killed the wrong contestant.
 ---
 
 # The Race: Linear vs Backtracking
 
-This book has spent nineteen chapters claiming that derivatives beat backtracking. Time to prove it with a stopwatch — and to tell you, honestly, what happened when we first tried. This chapter is a true story; the commits are its receipts.
+This book has spent nineteen chapters claiming that derivatives beat backtracking. Time to prove it with a stopwatch, and to tell you honestly what happened when we first tried. This chapter is a true story; the commits are its receipts.
 
 ## Act 1: build the rival
 
-You cannot race alone. We need a backtracking matcher — a simplified version of how many mainstream regex engines work — and it must be *correct*, or the race is meaningless. So the first spec is not about speed at all: the rival must agree with our engine on everything.
+You cannot race alone. We need a backtracking matcher (a simplified version of how many mainstream regex engines work), and it must be *correct*, or the race is meaningless. So the first spec is not about speed at all: the rival must agree with our engine on everything.
 
 Commit [98b6a61](https://github.com/ubugeeei-prod/lets-start-functional/commit/98b6a61c029070f1af24f53251b93692043bdf45) adds [`regex/tests/src/Spec/Naive.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/src/Spec/Naive.idr):
 
@@ -43,7 +43,7 @@ naiveSpecs =
   ]
 ```
 
-Note the "tricky nullable-head cases" — patterns like `(a*)*b` whose subexpressions can match nothing are exactly where naive matchers get subtly wrong answers or fail to terminate. Red, as usual, arrives at compile time:
+Note the "tricky nullable-head cases": patterns like `(a*)*b` whose subexpressions can match nothing are exactly where naive matchers get subtly wrong answers or fail to terminate. Red, as usual, arrives at compile time:
 
 ```
 Error: Module Regex.Naive not found
@@ -109,7 +109,7 @@ naiveMatch : Regex -> String -> Bool
 naiveMatch r s = go r (unpack s) null
 ```
 
-The style is **continuation-passing**: `k` — the continuation — is a function meaning "what the rest of the match still expects". Continuations are the functional "and then". A regex alone cannot answer "did I succeed?"; it can only answer "here is what I left behind — does the rest work out?". So `Cat l r` matches `l` and hands it the continuation "now match `r`, then do whatever we were going to do". `Alt` becomes the honest `||`: try the whole left future, and if that entire tree of possibilities fails, rewind and try the right. That one `||` line *is* backtracking — pretty to read, and quietly exponential. `Star`'s guard (`length rest < length cs`) refuses zero-width repetitions, which is why `(a|)*` terminates; and `%default covering` admits up front that this recursion is not structural. The final continuation in `naiveMatch` is `null`: when the pattern is done, the input must be too.
+The style is **continuation-passing**: `k`, the continuation, is a function meaning "what the rest of the match still expects". Continuations are the functional "and then". A regex alone cannot answer "did I succeed?"; it can only answer "here is what I left behind; does the rest work out?". So `Cat l r` matches `l` and hands it the continuation "now match `r`, then do whatever we were going to do". `Alt` becomes the honest `||`: try the whole left future, and if that entire tree of possibilities fails, rewind and try the right. That one `||` line *is* backtracking: pretty to read, and quietly exponential. `Star`'s guard (`length rest < length cs`) refuses zero-width repetitions, which is why `(a|)*` terminates; and `%default covering` admits up front that this recursion is not structural. The final continuation in `naiveMatch` is `null`: when the pattern is done, the input must be too.
 
 ```sh
 make test
@@ -124,7 +124,7 @@ make test
 
 ## Act 2: the racetrack
 
-The classic adversarial family — from Russ Cox's famous writeup — is `(a?){n}a{n}` matched against exactly `n` a's. Every `a?` must match nothing for the whole thing to succeed, but a backtracker has `2^n` ways to distribute the a's and, failing forward, visits essentially all of them. The bench harness, [`regex/bench/src/Main.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/bench/src/Main.idr):
+The classic adversarial family, from Russ Cox's famous writeup, is `(a?){n}a{n}` matched against exactly `n` a's. Every `a?` must match nothing for the whole thing to succeed, but a backtracker has `2^n` ways to distribute the a's and, failing forward, visits essentially all of them. The bench harness, [`regex/bench/src/Main.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/bench/src/Main.idr):
 
 ```idris
 ||| `(a?){n}a{n}`, built directly with the sugar combinators.
@@ -192,7 +192,7 @@ bench: install
 ```
 
 > [!NOTE]
-> If you are replaying commits: the rival was built right after the pretty-printer, but the benchmark itself was wired up *last* — after the proofs and the lexer chapters — which is why the suite count jumps from 154 to 167 within this chapter. The commit history keeps everyone honest, including us.
+> If you are replaying commits: the rival was built right after the pretty-printer, but the benchmark itself was wired up *last* (after the proofs and the lexer chapters), which is why the suite count jumps from 154 to 167 within this chapter. The commit history keeps everyone honest, including us.
 
 ## Act 3: the twist
 
@@ -206,13 +206,13 @@ make bench
 Killed: 9
 ```
 
-Not one line of results. The operating system killed the process — out of memory — and here is the twist: it never even reached the backtracker. The victim was **our** engine.
+Not one line of results. The operating system had killed the process, out of memory, and it never even reached the backtracker. The victim was **our** engine.
 
-So we did what you do: diagnose. Derive `evil n` by hand for a few characters and watch the trees. Each `a?` that might-or-might-not consume the character splits the derivative into choices, and the choices arrive shaped like `Alt x (Alt y (Alt x ...))` — with *duplicates*. Our `alt` from [Smart Constructors](./10-smart-constructors.md) does check for duplicates, but shallowly: `if l == r then l else Alt l r` compares only the two immediate arguments. The duplicate `x` above hides one level down in the spine, where that check never looks. Junk survives one derivative step, breeds in the next, compounds every step after that — and memory dies before the clock prints anything.
+So we did what you do: diagnose. Derive `evil n` by hand for a few characters and watch the trees. Each `a?` that might-or-might-not consume the character splits the derivative into choices, and the choices arrive shaped like `Alt x (Alt y (Alt x ...))`, with *duplicates*. Our `alt` from [Smart Constructors](./10-smart-constructors.md) does check for duplicates, but shallowly: `if l == r then l else Alt l r` compares only the two immediate arguments. The duplicate `x` above hides one level down in the spine, where that check never looks. Junk survives one derivative step, breeds in the next, compounds every step after that, and memory runs out before the clock prints anything.
 
 The cure has been known since Brzozowski's original 1964 paper: **normalize choices**. Flatten the whole `Alt` spine into a list, remove duplicates wherever they sit, rebuild. We rediscovered a sixty-year-old lemma with `make bench`, which is somehow both humbling and exactly how it should feel.
 
-First, the failure pinned down as specs — commit [40b08d8](https://github.com/ubugeeei-prod/lets-start-functional/commit/40b08d864e98f2cbabfc6fc3202e7ee16ae1bc19). Two new cases join `smartSpecs` in `Spec/Core.idr`:
+First, the failure gets pinned down as specs, in commit [40b08d8](https://github.com/ubugeeei-prod/lets-start-functional/commit/40b08d864e98f2cbabfc6fc3202e7ee16ae1bc19). Two new cases join `smartSpecs` in `Spec/Core.idr`:
 
 ```idris
   , shouldBe "alternatives flatten and drop duplicates"
@@ -246,7 +246,7 @@ run n r = foldl (flip deriv) r (replicate n 'a')
         && not (matches (evil 24) (pack (replicate 23 'a'))))
 ```
 
-This red fails to compile — `size` does not exist yet — and even once it does, the old `alt` cannot pass the flatten-and-dedupe specs. Commit [fcdc16b](https://github.com/ubugeeei-prod/lets-start-functional/commit/fcdc16b7a02a9b4cd000ef5828ad9a55b52cb3d5) delivers the fix in [`regex/src/Regex/Core.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Core.idr):
+This red fails to compile (`size` does not exist yet), and even once it does, the old `alt` cannot pass the flatten-and-dedupe specs. Commit [fcdc16b](https://github.com/ubugeeei-prod/lets-start-functional/commit/fcdc16b7a02a9b4cd000ef5828ad9a55b52cb3d5) delivers the fix in [`regex/src/Regex/Core.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Core.idr):
 
 ```idris
 ||| Flatten an Alt-spine into the list of its alternatives.
@@ -292,7 +292,7 @@ size (Alt l r) = S (size l + size r)
 size (Star r)  = S (size r)
 ```
 
-All the old `alt` behavior falls out as special cases: `Fail` branches vanish because `altList Fail = []`, and `alt r r` collapses because `nub` keeps one copy. The new power is that duplicates are caught at *any depth* in the spine. Note what did **not** change: `deriv`, `matches`, `nullable` — the engine's logic is untouched. The entire fix lives inside one smart constructor, which is precisely what smart constructors bought us: a single choke point where every `Alt` in the program gets built.
+All the old `alt` behavior falls out as special cases: `Fail` branches vanish because `altList Fail = []`, and `alt r r` collapses because `nub` keeps one copy. The new power is that duplicates are caught at *any depth* in the spine. And look at what did **not** change: `deriv`, `matches`, `nullable`. The engine's logic is untouched. The entire fix lives inside one smart constructor, which is precisely what smart constructors bought us: a single choke point where every `Alt` in the program gets built.
 
 ```sh
 make test
@@ -335,9 +335,9 @@ n = 20
   backtracking: 113.461 ms  (matched: True)
 ```
 
-The exact figures depend on your machine; the *shape* does not, and the shape is the whole story. At `n = 10` the two engines are neck and neck. Then the backtracker roughly quadruples every time `n` grows by two — that is `2^n` wearing a stopwatch. Extrapolate a little: `n = 30` would take minutes, `n = 40` days. (An earlier version of this benchmark tried `n = 22`; we killed it after twelve minutes of CPU time.) The derivative engine answers the `n = 20` case in two milliseconds.
+The exact figures depend on your machine; the *shape* does not, and the shape is the whole story. At `n = 10` the two engines are neck and neck. Then the backtracker roughly quadruples every time `n` grows by two: that is `2^n` wearing a stopwatch. Extrapolate a little and `n = 30` would take minutes, `n = 40` days. (An earlier version of this benchmark tried `n = 22`; we killed it after twelve minutes of CPU time.) The derivative engine answers the `n = 20` case in two milliseconds.
 
-The second half of the run demonstrates the promise in this book's pitch directly — a *fixed* pattern against inputs a thousand times longer:
+The second half of the run demonstrates the promise in this book's pitch directly, with a *fixed* pattern against inputs a thousand times longer:
 
 ```
 fixed pattern (a|b)*c, growing input — derivatives only
@@ -349,18 +349,18 @@ fixed pattern (a|b)*c, growing input — derivatives only
 Ten times the input, ten times the time: one derivative per character, a million characters in a tenth of a second. Linear means linear.
 
 > [!NOTE]
-> One honesty note before we take the trophy. "Linear in the input" is the unconditional promise; the *constant* per character depends on how large the derivatives of your particular pattern get, and our `nub`-based normalization does its bookkeeping naively. Against the adversarial `(a?){n}a{n}` family, growing the *pattern* gets expensive — `evil 100` takes seconds per match, because every step walks and deduplicates large alternative lists. Industrial derivative engines memoize their way out of this (next section); ours prefers to stay readable.
+> One honesty note before we take the trophy. "Linear in the input" is the unconditional promise; the *constant* per character depends on how large the derivatives of your particular pattern get, and our `nub`-based normalization does its bookkeeping naively. Against the adversarial `(a?){n}a{n}` family, growing the *pattern* gets expensive: `evil 100` takes seconds per match, because every step walks and deduplicates large alternative lists. Industrial derivative engines memoize their way out of this (next section); ours prefers to stay readable.
 
 ## What the industrial engines do
 
-Our engine is now the same *species* as the serious linear-time matchers, minus the heavy optimization. Google's RE2 — built in response to exactly this backtracking pathology — compiles regexes to automata and builds a DFA lazily, caching states as the input reveals which ones matter. Memoized derivatives amount to the same trick: `deriv` computed once per (state, character) pair and cached *is* a lazy DFA, a construction studied carefully in the Owens–Reppy–Turon paper you will meet in [What's Next](./21-whats-next.md). Rust's `regex` crate follows the same philosophy with a toolbox of engines behind one guaranteed-linear interface. What none of them do is backtrack — because, as our stopwatch just confirmed, an engine that is fast on the average case but exponential in the corner is an outage waiting for its input.
+Our engine is now the same *species* as the serious linear-time matchers, minus the heavy optimization. Google's RE2, built in response to exactly this backtracking pathology, compiles regexes to automata and builds a DFA lazily, caching states as the input reveals which ones matter. Memoized derivatives amount to the same trick: `deriv` computed once per (state, character) pair and cached *is* a lazy DFA, a construction studied carefully in the Owens–Reppy–Turon paper you will meet in [What's Next](./21-whats-next.md). Rust's `regex` crate follows the same philosophy with a toolbox of engines behind one guaranteed-linear interface. What none of them do is backtrack, because, as our stopwatch just confirmed, an engine that is fast on the average case but exponential in the corner is an outage waiting for its input.
 
 ## Summary
 
 - The rival is a continuation-passing backtracker: `k` is "what the rest of the match expects", `Alt` becomes `||` (that line *is* the backtracking), `Cat` chains continuations, and `Star` guards against empty-body loops. Specs pin it to agree with the derivative engine everywhere.
 - The benchmark races both on Russ Cox's `(a?){n}a{n}` family, with `Lazy` keeping the work inside the clock.
 - The twist: the first `make bench` OOM'd *our* engine. The shallow duplicate check in `alt` misses duplicates deep in the `Alt` spine, and derivative junk compounds per character.
-- The fix is Brzozowski's own normalization — flatten, dedupe (`nub`), rebuild — implemented entirely inside the `alt` smart constructor, with `size` guarding the property in the suite forever after.
+- The fix is Brzozowski's own normalization (flatten, dedupe with `nub`, rebuild), implemented entirely inside the `alt` smart constructor, with `size` guarding the property in the suite forever after.
 - Industrial engines (RE2, rust/regex) are lazy-DFA cousins of memoized derivatives: same species, more chrome.
 
 The engine is fast, proven where it counts, and battle-tested by its own benchmark. Time to build something *with* it: [Capstone: A Lexer](./20-lexer.md).

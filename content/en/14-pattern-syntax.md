@@ -9,7 +9,7 @@ The combinators are on the workbench; time to build the thing we bought them for
 
 ## The grammar
 
-Regex notation has precedence, just like arithmetic. In `ab|c`, the juxtaposition binds tighter than the bar — it means `(ab)|c`, not `a(b|c)`. In `ab*`, the star binds tighter still: `a(b*)`. Written as a grammar, loosest binding first — this is the module doc comment of `regex/src/Regex/Syntax.idr`:
+Regex notation has precedence, just like arithmetic. In `ab|c`, the juxtaposition binds tighter than the bar: it means `(ab)|c`, not `a(b|c)`. In `ab*`, the star binds tighter still: `a(b*)`. Written as a grammar, loosest binding first (this is the module doc comment of `regex/src/Regex/Syntax.idr`):
 
 ```
 alternation := sequence ('|' sequence)*
@@ -19,7 +19,7 @@ atom        := '(' alternation ')' | '[' class ']'
              | '.' | '\' escape | plain character
 ```
 
-The mapping rule that turns this grammar into code is beautifully mechanical: **one parser per precedence level**, each level's parser built out of calls to the next-tighter level. `alternation` calls `sequenceOf`, which calls `repetition`, which calls `atom` — and `atom`, at the bottom, loops back up to `alternation` for parenthesized groups. That loop is what makes the grammar recursive, and it will teach us something real about lazy versus strict evaluation before the chapter is out.
+The mapping rule that turns this grammar into code is beautifully mechanical: **one parser per precedence level**, each level's parser built out of calls to the next-tighter level. `alternation` calls `sequenceOf`, which calls `repetition`, which calls `atom`. And `atom`, at the bottom, loops back up to `alternation` for parenthesized groups. That loop is what makes the grammar recursive, and it will teach us something real about lazy versus strict evaluation before the chapter is out.
 
 ## Red: specs in three flavors
 
@@ -41,7 +41,7 @@ no pat input =
     Nothing => False
 ```
 
-Note that `no` is not `not . ok` — a pattern that *fails to compile* should count as neither. The first flavor of spec checks **structure**: the parser must produce exactly the trees we expect, precedence included:
+Note that `no` is not `not . ok`: a pattern that *fails to compile* should count as neither. The first flavor of spec checks **structure**. The parser must produce exactly the trees we expect, precedence included:
 
 ```idris
 export
@@ -68,7 +68,7 @@ syntaxSpecs =
 
 The fifth and sixth specs *are* the precedence table, executable. If we ever wire the levels up in the wrong order, these two go red.
 
-The second flavor checks that **malformed input is rejected** — trailing garbage is a failure, not a warning:
+The second flavor checks that **malformed input is rejected**: trailing garbage is a failure, not a warning:
 
 ```idris
     -- malformed patterns are rejected, not guessed at
@@ -80,7 +80,7 @@ The second flavor checks that **malformed input is rejected** — trailing garba
       (compile "a{2") Nothing
 ```
 
-And the third flavor is **behavior** — the classics, plus everything the last three chapters built, now reachable by typing it:
+And the third flavor is **behavior**: the classics, plus everything the last three chapters built, now reachable by typing it:
 
 ```idris
     -- behavior: the classics
@@ -109,7 +109,7 @@ And the third flavor is **behavior** — the classics, plus everything the last 
   ]
 ```
 
-(Three more behavior specs of the same shape — ranges `[a-c]+`, the wildcard's exactly-one-character rule, and `(ha)+` repeating as a unit — are in the commit; twenty-three specs in all.) The date pattern from the [sugar chapter](./12-sugar.md), which took a `where` block of nested function calls, is now seventeen characters.
+(Three more behavior specs of the same shape, covering ranges `[a-c]+`, the wildcard's exactly-one-character rule, and `(ha)+` repeating as a unit, are in the commit; twenty-three specs in all.) The date pattern from the [sugar chapter](./12-sugar.md), which took a `where` block of nested function calls, is now seventeen characters.
 
 ```sh
 make test
@@ -124,7 +124,7 @@ Spec.Syntax:11:1--11:20
       ^^^^^^^^^^^^^^^^^^^
 ```
 
-Twenty-three specs red at once — more than any red step so far. This is commit [302ad49](https://github.com/ubugeeei-prod/lets-start-functional/commit/302ad496f1e0f0ca423c9f9853ad38ac7e058756).
+Twenty-three specs red at once, more than any red step so far. This is commit [302ad49](https://github.com/ubugeeei-prod/lets-start-functional/commit/302ad496f1e0f0ca423c9f9853ad38ac7e058756).
 
 ## Green: the pattern parser
 
@@ -175,11 +175,11 @@ escapedAtom = char '\\' *> map interp anyToken
     interp c   = lit c
 ```
 
-Savor the `'D'` line. In [Character Classes](./11-character-classes.md) we made `complement` a single field flip — and here is the dividend: the negated shorthand `\D`, a feature in its own right in most regex engines, costs us exactly one call to `complement`. Good representations keep paying after you have forgotten choosing them.
+Savor the `'D'` line. In [Character Classes](./11-character-classes.md) we made `complement` a single field flip, and here is the dividend: the negated shorthand `\D`, a feature in its own right in most regex engines, costs us exactly one call to `complement`. Good representations keep paying after you have forgotten choosing them.
 
 ### Classes
 
-Class syntax — `[a-c]`, `[^0-9]`, `[\d_-]` — is its own miniature language, so it gets its own parsers. Every class *item* contributes a list of ranges, and the whole class concatenates them:
+Class syntax (`[a-c]`, `[^0-9]`, `[\d_-]`) is its own miniature language, so it gets its own parsers. Every class *item* contributes a list of ranges, and the whole class concatenates them:
 
 ```idris
 ||| Inside a class, `\d` `\w` `\s` contribute their ranges.
@@ -218,11 +218,11 @@ classAtom = do
   pure (Sym (MkSet neg (concat items)))
 ```
 
-`rangeOrSingle` is Monad and Alternative working together: parse a character, then *try* to continue with `-hi`; if that fails, the character stood alone. (In `shorthandRanges`, `ranges digit` is just record-field access used as a function — the list of ranges inside `digit`.) And `classAtom` reads like its own grammar rule — bracket, optional caret, items, bracket — before assembling a `MkSet` directly. The parser and the representation from two chapters ago click together with no adapter in between.
+`rangeOrSingle` is Monad and Alternative working together: parse a character, then *try* to continue with `-hi`; if that fails, the character stood alone. (In `shorthandRanges`, `ranges digit` is just record-field access used as a function: the list of ranges inside `digit`.) And `classAtom` reads like its own grammar rule (bracket, optional caret, items, bracket) before assembling a `MkSet` directly. The parser and the representation from two chapters ago click together with no adapter in between.
 
 ### Postfix operators are functions
 
-Here is the chapter's slickest idea. What *is* `*` in `ab*`? It is something that takes the regex to its left and transforms it. So parse it as exactly that — a function:
+Here is the chapter's slickest idea. What *is* `*` in `ab*`? It is something that takes the regex to its left and transforms it. So parse it as exactly that, a function:
 
 ```idris
 ||| A counted repetition suffix: `{n}`, `{n,}` or `{n,m}`.
@@ -248,7 +248,7 @@ postfix =
   <|> counted
 ```
 
-`postfix` has type `Parser (Regex -> Regex)` — a parser whose *result is a function*. In a language where functions are values, that is not exotic; it is Tuesday. `char '*' *> pure star` says: see a star character, produce the `star` smart constructor itself. The three-way branch inside `counted` mirrors the three syntaxes: `{n,m}` gives `between n m`, `{n,}` gives `atLeast n`, bare `{n}` gives `exactly n` — each a partially applied function from the sugar chapter, waiting for its regex.
+`postfix` has type `Parser (Regex -> Regex)`: a parser whose *result is a function*. In a language where functions are values, that is not exotic; it is Tuesday. `char '*' *> pure star` says: see a star character, produce the `star` smart constructor itself. The three-way branch inside `counted` mirrors the three syntaxes: `{n,m}` gives `between n m`, `{n,}` gives `atLeast n`, bare `{n}` gives `exactly n`, each a partially applied function from the sugar chapter, waiting for its regex.
 
 ### The grammar itself
 
@@ -291,7 +291,7 @@ mutual
   group = char '(' *> recur alternation <* char ')'
 ```
 
-Every fold here is earning its keep. `sequenceOf` folds `cat` over the atoms — the same `foldr cat Eps` shape as `literal` in the sugar chapter. `repetition` folds *function application* itself: `posts` is a list of `Regex -> Regex` functions, and `foldl (\r, f => f r) a posts` pipes the atom through each in left-to-right order, so `a*?` is `opt (star a)`, just as the notation reads. And `alternation` folds `alt` across the `|`-separated branches with a `foldl` — a line that is correct today and worth remembering: when we build a pretty-printer in [Printing Patterns Back](./17-pretty-printing.md), this exact fold will come under scrutiny and change direction. Folds have a handedness, and it shows up in the shape of your trees.
+Every fold here is earning its keep. `sequenceOf` folds `cat` over the atoms, the same `foldr cat Eps` shape as `literal` in the sugar chapter. `repetition` folds *function application* itself: `posts` is a list of `Regex -> Regex` functions, and `foldl (\r, f => f r) a posts` pipes the atom through each in left-to-right order, so `a*?` is `opt (star a)`, just as the notation reads. And `alternation` folds `alt` across the `|`-separated branches with a `foldl`, a line that is correct today and worth remembering: when we build a pretty-printer in [Printing Patterns Back](./17-pretty-printing.md), this exact fold will come under scrutiny and change direction. Folds have a handedness, and it shows up in the shape of your trees.
 
 ### The knot, and why Idris made us tie it
 
@@ -309,9 +309,9 @@ recur : Lazy (Parser a) -> Parser a
 recur p = MkParser $ \cs => runParser p cs
 ```
 
-Our grammar is circular: `alternation` needs `atom`, and `atom` (through `group`) needs `alternation`. In Haskell — a lazy language — you write the circular definitions and nothing happens until input arrives; the knot ties itself silently. Idris evaluates eagerly: building `group` requires building `alternation` *right now*, which requires `group`, which requires `alternation`… an infinite regress at construction time, before a single character is parsed. `recur` breaks the loop by accepting its argument as `Lazy (Parser a)` — Idris's explicit "do not evaluate this yet" type — and only touching it inside the lambda, which runs when input shows up. The fix is two lines. The lesson is bigger: laziness is not free magic; it is a semantic choice that Haskell makes globally and silently, and Idris makes locally and *visibly*. Having to write `recur` once, in the one place the grammar bites its own tail, is a fair price for seeing exactly where recursion-in-data actually lives.
+Our grammar is circular: `alternation` needs `atom`, and `atom` (through `group`) needs `alternation`. In Haskell, a lazy language, you write the circular definitions and nothing happens until input arrives; the knot ties itself silently. Idris evaluates eagerly: building `group` requires building `alternation` *right now*, which requires `group`, which requires `alternation`… an infinite regress at construction time, before a single character is parsed. `recur` breaks the loop by accepting its argument as `Lazy (Parser a)`, Idris's explicit "do not evaluate this yet" type, and only touching it inside the lambda, which runs when input shows up. The fix is two lines. The lesson is bigger: laziness is not free magic; it is a semantic choice that Haskell makes globally and silently, and Idris makes locally and *visibly*. Having to write `recur` once, in the one place the grammar bites its own tail, is a fair price for seeing exactly where recursion-in-data actually lives.
 
-Finally, the front door — `Maybe` for now, upgraded in the next chapter:
+Finally, the front door. `Maybe` for now, upgraded in the next chapter:
 
 ```idris
 ||| Compile a pattern string into a regex — or `Nothing` when the
@@ -322,7 +322,7 @@ compile : String -> Maybe Regex
 compile = parse alternation
 ```
 
-Those malformed-input specs — `"a)"`, `"[abc"`, `"a{2"` — pass with no rejection code anywhere. `parse` already demands full consumption, so a parser that stops at the stray `)` has failed by definition. We wrote that policy one chapter ago; it just paid out three specs for free.
+Those malformed-input specs (`"a)"`, `"[abc"`, `"a{2"`) pass with no rejection code anywhere. `parse` already demands full consumption, so a parser that stops at the stray `)` has failed by definition. We wrote that policy one chapter ago; it just paid out three specs for free.
 
 ```sh
 make test
@@ -337,14 +337,14 @@ make test
 121/121 passed
 ```
 
-All twenty-three specs, one green commit: [a7eef7c](https://github.com/ubugeeei-prod/lets-start-functional/commit/a7eef7cbef3dcb1c6a53c1dad355a7bcc1341b33). It is worth pausing on that. A hundred and fifty lines of genuinely intricate code — recursive grammar, escapes, classes, counted repetition — landed in a single red-to-green step. That is not bravado; it is the dividend of the [previous chapter](./13-parser-combinators.md). Every combinator underneath was already specified and tested in isolation, so assembling them was the only step left to get wrong — and the twenty-three specs were standing by to catch even that.
+All twenty-three specs, one green commit: [a7eef7c](https://github.com/ubugeeei-prod/lets-start-functional/commit/a7eef7cbef3dcb1c6a53c1dad355a7bcc1341b33). It is worth pausing on that. A hundred and fifty lines of genuinely intricate code (recursive grammar, escapes, classes, counted repetition) landed in a single red-to-green step. That is not bravado; it is the dividend of the [previous chapter](./13-parser-combinators.md). Every combinator underneath was already specified and tested in isolation, so assembling them was the only step left to get wrong, and the twenty-three specs were standing by to catch even that.
 
 ## Summary
 
-- Regex notation is a grammar with precedence; the translation is mechanical — one parser per precedence level, each built from the next-tighter one.
-- Specs came in three flavors: structure (the precedence table, executable), malformed input (trailing garbage is failure — enforced by `parse`, no extra code), and behavior (the classics: `colou?r`, `gr[ae]y`, an email shape, the date).
-- Postfix operators parse as *functions* `Regex -> Regex`, applied to their atom by a `foldl` — `star`, `plus`, `opt`, `between n m` are the parse results themselves.
+- Regex notation is a grammar with precedence; the translation is mechanical: one parser per precedence level, each built from the next-tighter one.
+- Specs came in three flavors: structure (the precedence table, executable), malformed input (trailing garbage is failure, enforced by `parse` with no extra code), and behavior (the classics: `colou?r`, `gr[ae]y`, an email shape, the date).
+- Postfix operators parse as *functions* `Regex -> Regex`, applied to their atom by a `foldl`: `star`, `plus`, `opt`, `between n m` are the parse results themselves.
 - `\D` is one `complement` call; class items each contribute ranges that assemble straight into `MkSet`.
-- The grammar's self-reference needs `recur : Lazy (Parser a) -> Parser a` — eager Idris makes visible the knot that lazy Haskell ties silently; and `alternation`'s `foldl alt` is a line with a future ([Printing Patterns Back](./17-pretty-printing.md)).
+- The grammar's self-reference needs `recur : Lazy (Parser a) -> Parser a`: eager Idris makes visible the knot that lazy Haskell ties silently. And `alternation`'s `foldl alt` is a line with a future ([Printing Patterns Back](./17-pretty-printing.md)).
 
-`compile` still answers failure with a bare `Nothing` — no position, no message. Turning that into an API worth shipping is [A Public API](./15-public-api.md).
+`compile` still answers failure with a bare `Nothing`: no position, no message. Turning that into an API worth shipping is [A Public API](./15-public-api.md).

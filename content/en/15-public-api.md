@@ -1,6 +1,6 @@
 ---
 title: A Public API
-description: One import, positioned errors as data, and an unanchored search that needs no new machinery — the front door of the library.
+description: One import, positioned errors as data, and an unanchored search that needs no new machinery. The front door of the library.
 ---
 
 # A Public API
@@ -9,13 +9,13 @@ The engine is done; now we design its front door. This chapter is less about new
 
 ## What a user should need
 
-As of the [last chapter](./14-pattern-syntax.md), using our library takes four imports (`Regex.Core`, `Regex.Set`, `Regex.Sugar`, `Regex.Syntax`), knowledge of which module owns which name, and a `compile` that answers malformed patterns with a bare `Nothing` — no hint of what went wrong or where. Fine for us; rude to guests.
+As of the [last chapter](./14-pattern-syntax.md), using our library takes four imports (`Regex.Core`, `Regex.Set`, `Regex.Sugar`, `Regex.Syntax`), knowledge of which module owns which name, and a `compile` that answers malformed patterns with a bare `Nothing`, no hint of what went wrong or where. Fine for us; rude to guests.
 
 The wish list for a front door:
 
 - **One import.** `import Regex` and everything a user needs is in scope.
-- **Errors that say where.** Not `Nothing`, and not a prose string either — a *value* carrying the position, so an editor could underline the exact character.
-- **The searches people expect.** Whole-string `match`, and unanchored `contains` — because most users asking "does this contain a year?" do not want to write `.*` themselves.
+- **Errors that say where.** Not `Nothing`, and not a prose string either, but a *value* carrying the position, so an editor could underline the exact character.
+- **The searches people expect.** Whole-string `match`, and unanchored `contains`, because most users asking "does this contain a year?" do not want to write `.*` themselves.
 - **A one-call convenience** for scripts: pattern string in, verdict out.
 
 ## Red: specs against the front door
@@ -68,7 +68,7 @@ apiSpecs =
   ]
 ```
 
-The specs commit us to `Either CompileError Regex` — `Right` for success, `Left` for a structured error. And look closely at the two error expectations: `"ab)"` fails at position 2, the stray parenthesis. `"[oops"` fails at position 0 — the *opening* bracket, because the whole class is what never made sense. Those two numbers are about to fall out of the design almost for free.
+The specs commit us to `Either CompileError Regex`: `Right` for success, `Left` for a structured error. And look closely at the two error expectations: `"ab)"` fails at position 2, the stray parenthesis. `"[oops"` fails at position 0, the *opening* bracket, because the whole class is what never made sense. Those two numbers are about to fall out of the design almost for free.
 
 ```sh
 make test
@@ -116,7 +116,7 @@ import Regex.Syntax
 %default total
 ```
 
-Two kinds of import, and the difference *is* the API design. A plain `import` makes a module's names visible *here*, inside `Regex.idr` — and nowhere else. `import public` goes further: it re-exports, so anyone who writes `import Regex` also gets everything those modules export, as if they had imported them themselves. So `Regex.Core`, `Regex.Set` and `Regex.Sugar` — the AST, the sets, the sugar, the things users build with — travel with the one import. `Regex.Parse` and `Regex.Syntax` are plain imports: we use them below, but `satisfy`, `classItem` and friends do not leak into our users' namespaces. The public surface is declared in five lines of imports.
+Two kinds of import, and the difference *is* the API design. A plain `import` makes a module's names visible *here*, inside `Regex.idr`, and nowhere else. `import public` goes further: it re-exports, so anyone who writes `import Regex` also gets everything those modules export, as if they had imported them themselves. So `Regex.Core`, `Regex.Set` and `Regex.Sugar` (the AST, the sets, the sugar, the things users build with) travel with the one import. `Regex.Parse` and `Regex.Syntax` are plain imports: we use them below, but `satisfy`, `classItem` and friends do not leak into our users' namespaces. The public surface is declared in five lines of imports.
 
 ### Errors are data
 
@@ -138,7 +138,7 @@ Eq CompileError where
   e1 == e2 = e1.position == e2.position && e1.message == e2.message
 ```
 
-The temptation is to make errors strings — `"unexpected ) at position 2"` — because strings are easy to print. But a string is where information goes to die: an editor that wants to underline position 2 would have to *parse our error message*. A record keeps position and message as separate fields; `Show` is just one way to render it, not the thing itself. Errors are data first, prose second.
+The temptation is to make errors strings (`"unexpected ) at position 2"`), because strings are easy to print. But a string is where information goes to die: an editor that wants to underline position 2 would have to *parse our error message*. A record keeps position and message as separate fields; `Show` is just one way to render it, not the thing itself. Errors are data first, prose second.
 
 ### The position trick
 
@@ -173,9 +173,9 @@ compile s =
     Nothing        => Left (MkCompileError 0 "malformed pattern")
 ```
 
-Because our combinators backtrack fully, the grammar's top rule never crashes midway — when it hits something it cannot make sense of, it simply *stops consuming* and returns what it has, leftovers attached. That turns error location into arithmetic: the parser consumed `length input - length leftover` characters, so that difference is precisely the index where the pattern stopped making sense. No error-tracking machinery threaded through the combinators, no position counter in the parser state. The information was in the leftovers all along; we just had to stop throwing it away.
+Because our combinators backtrack fully, the grammar's top rule never crashes midway: when it hits something it cannot make sense of, it simply *stops consuming* and returns what it has, leftovers attached. That turns error location into arithmetic. The parser consumed `length input - length leftover` characters, so that difference is precisely the index where the pattern stopped making sense. No error-tracking machinery threaded through the combinators, no position counter in the parser state. The information was in the leftovers all along; we just had to stop throwing it away.
 
-Check it against the specs. For `"ab)"`, the parser consumes `ab`, refuses the `)`, leaves `")"`: 3 − 1 = position 2. For `"[oops"`, the class parser needs its closing `]`, fails, and backtracking unwinds to before the `[` — nothing is consumed at all: 5 − 5 = position 0, the opening bracket. Both expectations, one subtraction. (The `Nothing` branch is belt and braces: a sequence of zero atoms is `Eps`, so the top rule as written always succeeds — but `case` must be exhaustive, and honest code handles the case rather than asserting it away. Note also the explicit `covering` on `compile`: it calls the parser, and the parser's honesty about totality travels with it.)
+Check it against the specs. For `"ab)"`, the parser consumes `ab`, refuses the `)`, leaves `")"`: 3 − 1 = position 2. For `"[oops"`, the class parser needs its closing `]`, fails, and backtracking unwinds to before the `[`, so nothing is consumed at all: 5 − 5 = position 0, the opening bracket. Both expectations, one subtraction. (The `Nothing` branch is belt and braces: a sequence of zero atoms is `Eps`, so the top rule as written always succeeds. But `case` must be exhaustive, and honest code handles the case rather than asserting it away. Note also the explicit `covering` on `compile`: it calls the parser, and the parser's honesty about totality travels with it.)
 
 ### The rest of the surface
 
@@ -202,7 +202,7 @@ contains r = matches (cat dotStar (cat r dotStar))
     dotStar = star (Sym anyChar)
 ```
 
-Unanchored search sounds like a new engine feature — surely we need to slide the pattern along the input, trying every start position? We do not. "Contains an `r`-match" is *exactly* "the whole string matches `.*r.*`": anything, then the pattern, then anything. `dotStar` is `star (Sym anyChar)`, built from parts we have had for chapters. The feature is a definition — the [sugar chapter's](./12-sugar.md) design lesson, still paying out at the API level.
+Unanchored search sounds like a new engine feature: surely we need to slide the pattern along the input, trying every start position? We do not. "Contains an `r`-match" is *exactly* "the whole string matches `.*r.*`": anything, then the pattern, then anything. `dotStar` is `star (Sym anyChar)`, built from parts we have had for chapters. The feature is a definition: the [sugar chapter's](./12-sugar.md) design lesson, still paying out at the API level.
 
 ```idris
 ||| Compile and search in one call — for the quick, one-shot cases.
@@ -212,7 +212,7 @@ test : (pattern : String) -> (input : String) -> Either CompileError Bool
 test pattern input = map (\r => contains r input) (compile pattern)
 ```
 
-`test` composes the two halves — and look at *how*. `compile pattern` is an `Either CompileError Regex`, and `Either e` is a `Functor`, just like `Parser` was: its `map` transforms the `Right` value and passes any `Left` through untouched. So `map (\r => contains r input)` reads: if compilation succeeded, run the search on the regex; if it failed, the error propagates unchanged. The spec `test "[oops" "anything"` gets its `Left (MkCompileError 0 ...)` without a single `case` in sight. Interfaces you learn once keep showing up where you did not plan for them.
+`test` composes the two halves, and look at *how*. `compile pattern` is an `Either CompileError Regex`, and `Either e` is a `Functor`, just like `Parser` was: its `map` transforms the `Right` value and passes any `Left` through untouched. So `map (\r => contains r input)` reads: if compilation succeeded, run the search on the regex; if it failed, the error propagates unchanged. The spec `test "[oops" "anything"` gets its `Left (MkCompileError 0 ...)` without a single `case` in sight. Interfaces you learn once keep showing up where you did not plan for them.
 
 ```sh
 make test
@@ -238,7 +238,7 @@ This is commit [36533d1](https://github.com/ubugeeei-prod/lets-start-functional/
 
 Almost nothing in this chapter is an algorithm. It is a set of decisions:
 
-- **The boundary is explicit.** `import public` versus `import` draws the line between the user's vocabulary and our plumbing. If we rewrite the parser someday, no user code can possibly notice — they never had access to its internals.
+- **The boundary is explicit.** `import public` versus `import` draws the line between the user's vocabulary and our plumbing. If we rewrite the parser someday, no user code can possibly notice; they never had access to its internals.
 - **Errors are values.** A record with a `position` field can feed an editor, a REPL, a language server. A formatted string can only feed `putStrLn`. We implemented `Show` for the humans and kept the structure for everyone else.
 - **Positions came from design, not effort.** Because failure in our combinators is "stop and return leftovers" rather than "throw", the error position was recoverable by subtraction. Simple semantics compound: decisions made two chapters ago handed us this chapter's headline feature.
 - **Features stayed definitions.** `contains` is `.*r.*`. `test` is a `map`. `match` is a rename. The core did not move.
@@ -246,9 +246,9 @@ Almost nothing in this chapter is an algorithm. It is a set of decisions:
 ## Summary
 
 - `import Regex` is now the whole story for users: `import public` re-exports the AST, sets and sugar; the parser modules stay private plumbing.
-- `CompileError` is a record — position plus message — because errors are data for tools first and prose for humans second.
+- `CompileError` is a record (position plus message), because errors are data for tools first and prose for humans second.
 - The position trick: a backtracking parser never dies halfway, it stops consuming; `length input - length leftover` *is* the error position. `"ab)"` fails at 2, `"[oops"` at 0.
-- `match` renames `matches`; `contains r` is just `.*r.*` — unanchored search with zero new engine code.
-- `test` maps over `Either`, which is a `Functor` like `Parser` was — compile errors propagate through `map` with no `case` needed.
+- `match` renames `matches`; `contains r` is just `.*r.*`: unanchored search with zero new engine code.
+- `test` maps over `Either`, which is a `Functor` like `Parser` was: compile errors propagate through `map` with no `case` needed.
 
-The engine now has a front door — and we have used `Show`, `Eq`, `Functor` and friends often enough that it is time to meet the machinery properly, in [Interfaces and Two Monoids](./16-interfaces.md).
+The engine now has a front door. And we have used `Show`, `Eq`, `Functor` and friends often enough that it is time to meet the machinery properly, in [Interfaces and Two Monoids](./16-interfaces.md).
