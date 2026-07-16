@@ -1,23 +1,23 @@
 ---
 title: Printing Patterns Back
-description: toPattern renders the AST back into pattern syntax — context-dependent escaping, precedence with one Nat, and a roundtrip property that made the parser change.
+description: toPattern renders the AST back into pattern syntax, with context-dependent escaping, precedence as one Nat, and a roundtrip property that made the parser change.
 ---
 
 # Printing Patterns Back
 
-The parser turns pattern strings into trees. This chapter builds its inverse: `toPattern : Regex -> String`, which turns trees back into pattern strings — and a property test that squeezes both functions at once.
+The parser turns pattern strings into trees. This chapter builds its inverse, `toPattern : Regex -> String`, which turns trees back into pattern strings, plus a property test that squeezes both functions at once.
 
 ## Why print a regex?
 
 Three reasons, in ascending order of delight.
 
-First, debugging. `Show Regex` is faithful but noisy — `show (cat (lit 'a') (lit 'b'))` produces `Cat (Sym (MkSet False [('a', 'a')])) (Sym (MkSet False [('b', 'b')]))`, which is nobody's idea of readable. `"ab"` is.
+First, debugging. `Show Regex` is faithful but noisy: `show (cat (lit 'a') (lit 'b'))` produces `Cat (Sym (MkSet False [('a', 'a')])) (Sym (MkSet False [('b', 'b')]))`, which is nobody's idea of readable. `"ab"` is.
 
-Second, error messages. A tool that manipulates regexes — simplifying them, combining them, deriving them — wants to *show its work* in the syntax users actually write.
+Second, error messages. A tool that manipulates regexes (simplifying them, combining them, deriving them) wants to show its work in the syntax users actually write.
 
-Third, the delicious one: a printer that is genuinely the parser's inverse gives us a property test. Take a tree, print it, re-parse it — the same tree must come back. One spec line exercises every corner of both functions against each other.
+Third, the delicious one: a printer that is genuinely the parser's inverse gives us a property test. Take a tree, print it, re-parse it, and the same tree must come back. One spec line exercises every corner of both functions against each other.
 
-The hard problem is **precedence**. The tree `Cat (Alt a b) c` must print as `(a|b)c`; print it naively as `a|bc` and you have described a different tree. Parentheses must appear exactly where the child binds more loosely than its surroundings — no more (noise), no less (wrong).
+The hard problem is **precedence**. The tree `Cat (Alt a b) c` must print as `(a|b)c`; print it naively as `a|bc` and you have described a different tree. Parentheses must appear exactly where the child binds more loosely than its surroundings: no more (noise), no less (wrong).
 
 ## Red: the printer, specified
 
@@ -32,7 +32,7 @@ roundtrips p =
     Left _  => False
 ```
 
-And the specs — escaping, precedence, character sets, then the property:
+And the specs: escaping, precedence, character sets, then the property.
 
 ```idris
 export
@@ -65,7 +65,7 @@ prettySpecs =
         ["gr[ae]y", "(a|b)*c", "colou?r", "a.c", "[^x]+", "\\d{2,4}"])
 ```
 
-(The list continues with the monoid specs from the [previous chapter](./16-interfaces.md) — one commit, two chapters.) The suite is red at compile time:
+(The list continues with the monoid specs from the [previous chapter](./16-interfaces.md): one commit, two chapters.) The suite is red at compile time:
 
 ```
 Error: Module Regex.Pretty not found
@@ -92,7 +92,7 @@ escapeInside c    =
   if elem c (unpack "]\\-^") then "\\" ++ pack [c] else pack [c]
 ```
 
-Outside a class, `(`, `*`, `|` and their friends are special; inside `[...]`, they are ordinary, but `]`, `-` and `^` suddenly matter. The `isMeta` predicate already existed in the parser — this commit simply marks it `public export` so the printer and parser cannot drift apart about what counts as special. One definition, two consumers.
+Outside a class, `(`, `*`, `|` and their friends are special; inside `[...]`, they are ordinary, but `]`, `-` and `^` suddenly matter. The `isMeta` predicate already existed in the parser; this commit simply marks it `public export` so the printer and parser cannot drift apart about what counts as special. One definition, two consumers.
 
 ## Green: sets prefer their short names
 
@@ -128,7 +128,7 @@ renderSet s =
           ++ concat (map rangeItem rs) ++ "]"
 ```
 
-That cascade of equality tests works because `CharSet` is plain data with structural `Eq` — and because the parser builds these particular sets in exactly one shape each. `\d` in a pattern becomes `range '0' '9'`, so `range '0' '9'` prints back as `\d`. Data in canonical form is data you can recognize with `==`.
+That cascade of equality tests works because `CharSet` is plain data with structural `Eq`, and because the parser builds these particular sets in exactly one shape each. `\d` in a pattern becomes `range '0' '9'`, so `range '0' '9'` prints back as `\d`. Data in canonical form is data you can recognize with `==`.
 
 ## Green: precedence is one Nat
 
@@ -154,19 +154,19 @@ toPattern : Regex -> String
 toPattern = render 0
 ```
 
-The levels are 0 = alternation, 1 = concatenation, 2 = postfix, 3 = atom. `Alt` produces a level-0 thing, so it wraps whenever the context demands anything tighter (`p > 0`) — that is the `a(b|c)` spec. `Star` produces a level-2 thing and asks its child for a level-3 atom, so `Star (Cat ...)` wraps its body: `(ab)*`.
+The levels are 0 = alternation, 1 = concatenation, 2 = postfix, 3 = atom. `Alt` produces a level-0 thing, so it wraps whenever the context demands anything tighter (`p > 0`); that is the `a(b|c)` spec. `Star` produces a level-2 thing and asks its child for a level-3 atom, so `Star (Cat ...)` wraps its body: `(ab)*`.
 
 ## The asymmetry, and the conversation it forced
 
-Look closely at the `Cat` line — it is not symmetric:
+Look closely at the `Cat` line. It is not symmetric:
 
 ```idris
 render p (Cat l r) = wrap (p > 1) (render 2 l ++ render 1 r)
 ```
 
-The left child renders at level 2, the right child at level 1. Why? Because `Cat` *associates to the right* in our trees: the parser folds `abc` into `Cat a (Cat b c)`. A right child that is itself a `Cat` is not a deviation from the shape — it is the shape — so it may render at concatenation level, no parentheses. A *left* child that is a `Cat` would be a shape the parser never produces, and rendering it at level 2 duly fences it off. The same asymmetry appears on the `Alt` line, one level down. The renderer does not just know the grammar's precedence; it knows the parser's *associativity*.
+The left child renders at level 2, the right child at level 1. Why? Because `Cat` *associates to the right* in our trees: the parser folds `abc` into `Cat a (Cat b c)`. A right child that is itself a `Cat` is not a deviation from the shape (it is the shape), so it may render at concatenation level, no parentheses. A *left* child that is a `Cat` would be a shape the parser never produces, and rendering it at level 2 duly fences it off. The same asymmetry appears on the `Alt` line, one level down. The renderer does not just know the grammar's precedence; it knows the parser's *associativity*.
 
-And that knowledge caught something. While making the roundtrip spec pass, one shape refused to line up: concatenation folded to the right (`foldr cat Eps`, from [Parsing Pattern Syntax](./14-pattern-syntax.md)) — but alternation folded to the *left*. Nobody had noticed, because matching does not care which way `a|b|c` leans. A printer cares intensely. So the green commit changed the parser, in [`regex/src/Regex/Syntax.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Syntax.idr):
+And that knowledge caught something. While making the roundtrip spec pass, one shape refused to line up: concatenation folded to the right (`foldr cat Eps`, from [Parsing Pattern Syntax](./14-pattern-syntax.md)), but alternation folded to the *left*. Nobody had noticed, because matching does not care which way `a|b|c` leans. A printer cares intensely. So the green commit changed the parser, in [`regex/src/Regex/Syntax.idr`](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/src/Regex/Syntax.idr):
 
 ```idris
   ||| Lowest precedence: sequences separated by `|`.
@@ -180,10 +180,10 @@ And that knowledge caught something. While making the roundtrip spec pass, one s
     pure (foldr alt Fail (first :: rest))
 ```
 
-where the last line used to read `pure (foldl alt first rest)`. Two functions that claim to be inverses must agree about tree shapes — not just about meaning — and it took a test that runs them nose to nose to force that conversation. This is the quiet payoff of the property spec: it does not merely check the printer; it audits every structural decision the parser ever made.
+where the last line used to read `pure (foldl alt first rest)`. Two functions that claim to be inverses must agree about tree shapes, not just about meaning, and it took a test that runs them nose to nose to force that conversation. This is the quiet payoff of the property spec: it does not merely check the printer; it audits every structural decision the parser ever made.
 
 > [!WARNING]
-> One honesty note. `Fail` renders as `∅`, and `∅` does not re-parse — there is no pattern syntax for "match nothing" (and none for shapes like a star directly under a star, either). So the roundtrip property is stated for *compiled* patterns: `compile` never produces `Fail` or the other syntaxless shapes, which is exactly why `compile (toPattern r) == Right r` can hold without exception for every tree that came from `compile`. Hand-built trees get a best-effort rendering, nothing more.
+> One honesty note. `Fail` renders as `∅`, and `∅` does not re-parse: there is no pattern syntax for "match nothing" (and none for shapes like a star directly under a star, either). So the roundtrip property is stated for *compiled* patterns. `compile` never produces `Fail` or the other syntaxless shapes, which is exactly why `compile (toPattern r) == Right r` can hold without exception for every tree that came from `compile`. Hand-built trees get a best-effort rendering, nothing more.
 
 ```sh
 make test
@@ -206,15 +206,15 @@ make test
 
 ## What the language just did for us
 
-Nothing in this chapter needed new machinery — and that is the point worth savoring. The printer is a fold over the same six constructors as everything else; precedence is an ordinary `Nat` argument; the roundtrip property is a plain function returning `Bool`. When your regexes are data, "print them back" is just one more tree walk, and "the printer inverts the parser" is just one more thing a test can say.
+Nothing in this chapter needed new machinery, and that is the point worth savoring. The printer is a fold over the same six constructors as everything else; precedence is an ordinary `Nat` argument; the roundtrip property is a plain function returning `Bool`. When your regexes are data, "print them back" is just one more tree walk, and "the printer inverts the parser" is just one more thing a test can say.
 
 ## Summary
 
-- `toPattern : Regex -> String` renders the AST back into pattern syntax — for debugging, for error messages, and for the roundtrip property `compile (toPattern r) == Right r`.
+- `toPattern : Regex -> String` renders the AST back into pattern syntax, for debugging, for error messages, and for the roundtrip property `compile (toPattern r) == Right r`.
 - Escaping is context-dependent: `escapeOutside` and `escapeInside` disagree about which characters are special, and both defer to the parser's own `isMeta`.
-- `renderSet` prefers short spellings (`\d`, `.`) by structural equality — canonical data is recognizable data.
+- `renderSet` prefers short spellings (`\d`, `.`) by structural equality; canonical data is recognizable data.
 - Precedence is one `Nat` threaded through `render`; `wrap` inserts parentheses exactly when a node binds more loosely than its context.
-- `Cat`'s children render at different levels because the tree is right-associated — and making the roundtrip exact forced the parser's alternation to switch from `foldl` to `foldr`. Inverse functions must agree about shapes, and the property test made them.
-- `Fail` prints as `∅`, which has no syntax — the roundtrip is honest about its scope: compiled patterns only.
+- `Cat`'s children render at different levels because the tree is right-associated, and making the roundtrip exact forced the parser's alternation to switch from `foldl` to `foldr`. Inverse functions must agree about shapes, and the property test made them.
+- `Fail` prints as `∅`, which has no syntax. The roundtrip is honest about its scope: compiled patterns only.
 
-Every spec so far — including today's property — checked examples we thought to write down. [Tests Become Theorems](./18-proofs.md) checks all inputs at once, and the test runner is the type checker.
+Every spec so far, including today's property, checked examples we thought to write down. [Tests Become Theorems](./18-proofs.md) checks all inputs at once, and the test runner is the type checker.

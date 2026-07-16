@@ -1,21 +1,21 @@
 ---
 title: Sugar Is Just Functions
-description: Add +, ?, {n,m} and string literals without touching the engine — each one is a small function that compiles down to the six core constructors.
+description: Add +, ?, {n,m} and string literals without touching the engine. Each one is a small function that compiles down to the six core constructors.
 ---
 
 # Sugar Is Just Functions
 
-Every regex flavor offers `+`, `?` and `{n,m}`, and our AST has none of them. This chapter adds them all without touching the engine — because none of them are new features.
+Every regex flavor offers `+`, `?` and `{n,m}`, and our AST has none of them. This chapter adds them all without touching the engine, because none of them are new features.
 
 ## No new matching power
 
-Ask what `a+` means: "one or more `a`s". But that is exactly "`a`, followed by zero or more `a`s" — `a·a*`. And `a?` — "zero or one" — is exactly the choice `a|ε`. And `a{3}` is `a·a·a`. Every one of these convenience forms can be *defined* in terms of the six constructors we already have. They add notation, not power.
+Ask what `a+` means: "one or more `a`s". But that is exactly "`a`, followed by zero or more `a`s", which is `a·a*`. And `a?`, "zero or one", is exactly the choice `a|ε`. And `a{3}` is `a·a·a`. Every one of these convenience forms can be *defined* in terms of the six constructors we already have. They add notation, not power.
 
-This suggests a deliberately functional way to grow a feature set: keep the core language minimal, and make everything else a definition. The engine — `nullable`, `deriv`, `matches` — will never learn that `plus` exists, and never has to. A feature that is a function needs no new cases anywhere, no changes to the matcher, and no new proofs later when we start proving things. This is the same design that keeps mathematics manageable: a handful of axioms, and everything else is theorems.
+This suggests a deliberately functional way to grow a feature set: keep the core language minimal, and make everything else a definition. The engine (`nullable`, `deriv`, `matches`) will never learn that `plus` exists, and never has to. A feature that is a function needs no new cases anywhere, no changes to the matcher, and no new proofs later when we start proving things. This is the same design that keeps mathematics manageable: a handful of axioms, and everything else is theorems.
 
 ## Red: specs for the convenience layer
 
-A new spec file, `regex/tests/src/Spec/Sugar.idr`. The specs come in two kinds: some check *behavior* (does `a+` reject the empty string?), and some check the *definition itself* — `plus r` should literally be the tree `Cat r (Star r)`:
+A new spec file, `regex/tests/src/Spec/Sugar.idr`. The specs come in two kinds: some check *behavior* (does `a+` reject the empty string?), and some check the *definition itself*, that `plus r` is literally the tree `Cat r (Star r)`:
 
 ```idris
 ||| Specs for `Regex.Sugar` — the convenience layer.
@@ -56,7 +56,7 @@ sugarSpecs =
       (literal "") Eps
 ```
 
-Counted repetition next — `{n}`, `{n,}` and `{n,m}` as functions named after what they mean:
+Counted repetition next: `{n}`, `{n,}` and `{n,m}` as functions named after what they mean:
 
 ```idris
     -- counted repetition
@@ -94,7 +94,7 @@ And the star of the file: a real pattern, assembled from everything this chapter
             (cat (lit '-') (exactly 2 (Sym digit)))))
 ```
 
-That is `\d{4}-\d{2}-\d{2}`, written as function calls. Clunky to type, admittedly — a parser for the real notation is exactly where this book is headed — but notice that it is built entirely out of parts that already exist and parts this chapter is about to define.
+That is `\d{4}-\d{2}-\d{2}`, written as function calls. Clunky to type, admittedly (a parser for the real notation is exactly where this book is headed), but notice that it is built entirely out of parts that already exist and parts this chapter is about to define.
 
 ```sh
 make test
@@ -143,7 +143,7 @@ opt : Regex -> Regex
 opt r = alt r Eps
 ```
 
-Each definition is its own specification read aloud. Note they build with the smart constructors `cat`, `alt`, `star` — sugar gets the simplification algebra from [Smart Constructors](./10-smart-constructors.md) for free.
+Each definition is its own specification read aloud. They build with the smart constructors `cat`, `alt`, `star`, so sugar gets the simplification algebra from [Smart Constructors](./10-smart-constructors.md) for free.
 
 ### String literals: a fold builds the tree
 
@@ -166,7 +166,7 @@ literal "abc"       =  cat (lit 'a')
                              (cat (lit 'c') Eps))
 ```
 
-The list's own structure *is* the regex's structure; the fold just renames the joints. This is the recurring trick of folds — you rarely write "loop over the string building up a tree", you say what cons and nil should become. And the empty-string case needs no special handling: `foldr` over `[]` is just the seed, `Eps`, which is exactly what "match the empty string" should compile to. The spec `shouldBe "the empty literal is Eps"` passes by construction.
+The list's own structure *is* the regex's structure; the fold just renames the joints. This is the recurring trick of folds: you rarely write "loop over the string building up a tree", you say what cons and nil should become. And the empty-string case needs no special handling. `foldr` over `[]` is just the seed, `Eps`, which is exactly what "match the empty string" should compile to, so the spec `shouldBe "the empty literal is Eps"` passes by construction.
 
 ### Counted repetition: numbers are data too
 
@@ -182,7 +182,7 @@ exactly Z     _ = Eps
 exactly (S k) r = cat r (exactly k r)
 ```
 
-Remember from the [crash course](./04-idris-crash-course.md) that `Nat` is an ordinary data type: `Z` (zero) or `S k` (successor of `k`). So we can pattern match on a *number* exactly the way we pattern match on a `Regex`: zero repetitions is `Eps`; `S k` repetitions is one `r` followed by `k` more. No loop counter, no mutation — the number unfolds into the tree, and the totality checker is satisfied because each recursive call is on a strictly smaller `Nat`.
+Remember from the [crash course](./04-idris-crash-course.md) that `Nat` is an ordinary data type: `Z` (zero) or `S k` (successor of `k`). So we can pattern match on a *number* exactly the way we pattern match on a `Regex`: zero repetitions is `Eps`; `S k` repetitions is one `r` followed by `k` more. No loop counter, no mutation. The number unfolds into the tree, and the totality checker is satisfied because each recursive call is on a strictly smaller `Nat`.
 
 `atLeast` falls out immediately:
 
@@ -207,9 +207,9 @@ upTo Z     _ = Eps
 upTo (S k) r = opt (cat r (upTo k r))
 ```
 
-The tempting wrong answer is "`k` optional copies in a row": `r? r? … r?`. For plain matching that happens to accept the same strings — but it is the wrong *shape*. It says each repetition is independent, when the truth of `{n,m}` is that the third repetition only makes sense if the second one happened. `upTo` nests instead: `upTo 2 r` is `(r (r)?)?` — an optional group containing `r` followed by *another* optional group. You can only get in to the inner repetition through the outer one. The structure of the data mirrors the dependency between the repetitions, which is exactly what you want when tools other than the matcher (a pretty-printer, say) start reading these trees.
+The tempting wrong answer is "`k` optional copies in a row": `r? r? … r?`. For plain matching that happens to accept the same strings, but it is the wrong *shape*. It says each repetition is independent, when the truth of `{n,m}` is that the third repetition only makes sense if the second one happened. `upTo` nests instead: `upTo 2 r` is `(r (r)?)?`, an optional group containing `r` followed by *another* optional group. You can only reach the inner repetition through the outer one. The structure of the data mirrors the dependency between the repetitions, which is exactly what you want when tools other than the matcher (a pretty-printer, say) start reading these trees.
 
-Note also that `upTo` has no `public export` — it is a private helper. `between` is the public face:
+Note also that `upTo` has no `public export`; it is a private helper. `between` is the public face:
 
 ```idris
 ||| Between `n` and `m` repetitions: `r{n,m}` is `n` required copies
@@ -220,7 +220,7 @@ between : (n : Nat) -> (m : Nat) -> Regex -> Regex
 between n m r = cat (exactly n r) (upTo (m `minus` n) r)
 ```
 
-`minus` on `Nat` cannot go below zero — there is no negative `Nat` to go to — so a nonsense request like `between 4 2` quietly truncates to `exactly 4`. Documenting that in the doc comment is the honest move. (Idris's types are expressive enough to *forbid* such calls outright — demand a proof that `n <= m` as an argument — but truncation is a fine, total answer, and this book picks its battles.)
+`minus` on `Nat` cannot go below zero (there is no negative `Nat` to go to), so a nonsense request like `between 4 2` quietly truncates to `exactly 4`. Documenting that in the doc comment is the honest move. (Idris's types are expressive enough to *forbid* such calls outright, by demanding a proof that `n <= m` as an argument, but truncation is a fine, total answer, and this book picks its battles.)
 
 ```sh
 make test
@@ -249,17 +249,17 @@ This is commit [1fe9416](https://github.com/ubugeeei-prod/lets-start-functional/
 
 Count what this chapter did *not* require: no change to `Regex`, no new case in `nullable` or `deriv`, no change to `matches`, no new interface. Six new functions, sixty lines with comments, and the engine's feature list roughly doubled. That is what "sugar is just functions" buys.
 
-There is a quiet guarantee hiding in this design, too. Because `plus`, `opt` and friends *only* produce trees made of the six core constructors, every property we ever establish about the core — including the machine-checked proofs coming in [Tests Become Theorems](./18-proofs.md) — automatically covers all the sugar. Features that are definitions inherit correctness from what they are defined on.
+There is a quiet guarantee hiding in this design, too. Because `plus`, `opt` and friends *only* produce trees made of the six core constructors, every property we ever establish about the core (including the machine-checked proofs coming in [Tests Become Theorems](./18-proofs.md)) automatically covers all the sugar. Features that are definitions inherit correctness from what they are defined on.
 
 > [!TIP]
 > When you design your own libraries, this pattern is worth stealing: find the smallest core that everything else can be *defined* in terms of, and grow the friendly surface as plain functions over it. The core stays testable and provable; the surface stays cheap.
 
 ## Summary
 
-- `+`, `?`, `{n}`, `{n,}`, `{n,m}` and string literals add notation, not matching power — each is a plain function compiling down to the six core constructors.
+- `+`, `?`, `{n}`, `{n,}`, `{n,m}` and string literals add notation, not matching power: each is a plain function compiling down to the six core constructors.
 - `literal` is a `foldr` that renames a list's joints: `"abc"` becomes `a · (b · (c · ε))`, and the empty string becomes `Eps` for free.
-- `exactly` recurses on a `Nat` — numbers are data, so counting is pattern matching.
-- `upTo` nests its options — `(r (r)?)?` — so each extra repetition depends on the previous one; `between n m` is `n` required copies then `m - n` optional ones, with truncating `Nat` subtraction.
+- `exactly` recurses on a `Nat`: numbers are data, so counting is pattern matching.
+- `upTo` nests its options as `(r (r)?)?`, so each extra repetition depends on the previous one; `between n m` is `n` required copies then `m - n` optional ones, with truncating `Nat` subtraction.
 - The engine never learned any of this happened, which is exactly the point.
 
-The date pattern was still painful to write as function calls — next we build the tool that will let users write `\d{4}-\d{2}-\d{2}` directly, starting with [Parser Combinators](./13-parser-combinators.md).
+The date pattern was still painful to write as function calls. Next we build the tool that will let users write `\d{4}-\d{2}-\d{2}` directly, starting with [Parser Combinators](./13-parser-combinators.md).

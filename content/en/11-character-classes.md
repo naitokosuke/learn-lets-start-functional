@@ -1,6 +1,6 @@
 ---
 title: Character Classes
-description: Describe sets of characters symbolically — ranges plus a negation flag — and let the compiler guide the AST refactor.
+description: Describe sets of characters symbolically, as ranges plus a negation flag, and let the compiler guide the AST refactor.
 ---
 
 # Character Classes
@@ -9,18 +9,18 @@ Real patterns are full of `.`, `[a-z]` and `\d`, and our engine can only match o
 
 ## The problem with enumerating
 
-A character class is a *set* of characters: `[a-z]` is the set of lowercase letters, `\d` is the set of digits, `.` is the set of — well, everything. The obvious representation is a list of members. For `[abc]`, fine. For `.`, hopeless: Unicode has over a million characters, and building a million-element list to represent "any character" is absurd. Negated classes like `[^"]` — everything *except* a quote — are even worse.
+A character class is a *set* of characters: `[a-z]` is the set of lowercase letters, `\d` is the set of digits, `.` is the set of, well, everything. The obvious representation is a list of members. For `[abc]` that is fine. For `.` it is hopeless: Unicode has over a million characters, and building a million-element list to represent "any character" is absurd. Negated classes like `[^"]` (everything *except* a quote) are even worse.
 
 The functional instinct here is to stop storing the members and start storing the *description*. A set of characters can be described by:
 
 - a list of inclusive ranges (`[a-z0-9_]` is three ranges and a one-character range), and
 - a flag saying "actually, everything *not* in those ranges".
 
-With that, `.` is "not in the empty list of ranges" — two words, not a million entries. Membership is a question we answer by computation, not by lookup.
+With that, `.` is "not in the empty list of ranges": two words, not a million entries. Membership is a question we answer by computation, not by lookup.
 
 ## Red: specs for a set type
 
-The specs go in a new file, `regex/tests/src/Spec/Set.idr`. First, the basics — building sets and asking about membership:
+The specs go in a new file, `regex/tests/src/Spec/Set.idr`. The basics first, building sets and asking about membership:
 
 ```idris
 ||| Specs for `Regex.Set` — symbolic sets of characters.
@@ -132,7 +132,7 @@ member : Char -> CharSet -> Bool
 member c (MkSet neg rs) = neg /= any (\(lo, hi) => lo <= c && c <= hi) rs
 ```
 
-Sit with that `/=` for a moment. We need: "in a range" when the flag is off, "not in a range" when the flag is on. You could write an `if`. But look at the truth table of `/=` on booleans — it is true exactly when the two sides differ. `False /= inRanges` is `inRanges`; `True /= inRanges` is `not inRanges`. Not-equals *is* exclusive-or, and exclusive-or with a flag *is* conditional negation. Three characters replace a four-line conditional, and once you have seen the trick you cannot unsee it.
+Sit with that `/=` for a moment. We need "in a range" when the flag is off and "not in a range" when the flag is on. You could write an `if`. But look at the truth table of `/=` on booleans: it is true exactly when the two sides differ. `False /= inRanges` is `inRanges`; `True /= inRanges` is `not inRanges`. Not-equals *is* exclusive-or, and exclusive-or with a flag *is* conditional negation. Three characters replace a four-line conditional, and once you have seen the trick you cannot unsee it.
 
 The constructors are one-liners:
 
@@ -167,9 +167,9 @@ complement : CharSet -> CharSet
 complement (MkSet neg rs) = MkSet (not neg) rs
 ```
 
-`complement` is the payoff of the symbolic representation in miniature. Complementing an enumerated set means materializing "everything else" — a million-element nightmare. Complementing a *description* means flipping one boolean. The work moved from the data to the `member` function, where it costs nothing.
+`complement` is the payoff of the symbolic representation in miniature. Complementing an enumerated set means materializing "everything else", a million-element nightmare. Complementing a *description* means flipping one boolean. The work moved from the data to the `member` function, where it costs nothing.
 
-The shorthands are not functions at all — just values, plain data:
+The shorthands are not functions at all, just plain values:
 
 ```idris
 ||| The digits `0-9` — the escape `\d`.
@@ -205,7 +205,7 @@ This is commit [d308014](https://github.com/ubugeeei-prod/lets-start-functional/
 
 ## Red: character sets belong in the AST
 
-`CharSet` exists, but the engine cannot use it: the AST's only way to consume a character is `Lit Char`, one exact character. Here is the plan — and it is a real refactor of the core type, our first. `Lit Char` becomes `Sym CharSet`: "match exactly one character drawn from this set". A literal is then just the special case of a one-character set, available through an ordinary function `lit`.
+`CharSet` exists, but the engine cannot use it: the AST's only way to consume a character is `Lit Char`, one exact character. Here is the plan, and it is a real refactor of the core type, our first. `Lit Char` becomes `Sym CharSet`: "match exactly one character drawn from this set". A literal is then just the special case of a one-character set, available through an ordinary function `lit`.
 
 The specs first, in `Spec/Core.idr`:
 
@@ -249,7 +249,7 @@ Spec.Core:99:17--99:20
 Did you mean any of: Lit, or it?
 ```
 
-Red — neither `Sym` nor `lit` exists. This is commit [18e8d25](https://github.com/ubugeeei-prod/lets-start-functional/commit/18e8d25353606318038a5e4e575579c824e2904f).
+Red: neither `Sym` nor `lit` exists. This is commit [18e8d25](https://github.com/ubugeeei-prod/lets-start-functional/commit/18e8d25353606318038a5e4e575579c824e2904f).
 
 ## Green: let the compiler drive
 
@@ -274,7 +274,7 @@ Error: While processing left hand side of nullable. Undefined name Lit.
 Error: While processing left hand side of deriv. Undefined name Lit.
 ```
 
-Every function that pattern-matched on `Lit` — `showRegex`, `Eq`'s `==`, `nullable`, `deriv` — stops compiling, with a line number. There is no fifth place hiding somewhere: pattern matching plus the `%default total` pledge means the compiler *must* account for every case of `Regex` in every function, so it cannot fail to notice a function we forgot. In most languages, "I changed a core type" is followed by days of grepping and prayer. Here it is followed by fixing four flagged sites, and when the file compiles, the refactor is done.
+Every function that pattern-matched on `Lit` (`showRegex`, `Eq`'s `==`, `nullable`, `deriv`) stops compiling, with a line number. There is no fifth place hiding somewhere: pattern matching plus the `%default total` pledge means the compiler *must* account for every case of `Regex` in every function, so it cannot fail to notice a function we forgot. In most languages, "I changed a core type" is followed by days of grepping and prayer. Here it is followed by fixing four flagged sites, and when the file compiles, the refactor is done.
 
 The fixes: `nullable (Sym _) = False` (a set still needs exactly one character), the `Show` and `Eq` cases delegate to `CharSet`'s own implementations, and `deriv` gets the only genuinely new logic in the whole refactor:
 
@@ -282,7 +282,7 @@ The fixes: `nullable (Sym _) = False` (a set still needs exactly one character),
 deriv c (Sym s)   = if member c s then Eps else Fail
 ```
 
-Compare it with the old line — `if c == x then Eps else Fail`. Equality against one character became membership in a set. That is the entire semantic difference between literals and character classes, and it is one function call wide.
+Compare it with the old line, `if c == x then Eps else Fail`. Equality against one character became membership in a set. That is the entire semantic difference between literals and character classes, and it is one function call wide.
 
 Finally, `Lit` lives on as an ordinary function:
 
@@ -295,9 +295,9 @@ lit : Char -> Regex
 lit c = Sym (single c)
 ```
 
-The same move as the smart constructors in the [previous chapter](./10-smart-constructors.md): what used to be a constructor is now a lowercase function that builds the general shape. The AST got *smaller* in spirit — still six constructors, but one of them now covers literals, classes, escapes and the wildcard alike.
+The same move as the smart constructors in the [previous chapter](./10-smart-constructors.md): what used to be a constructor is now a lowercase function that builds the general shape. The AST got *smaller* in spirit: still six constructors, but one of them now covers literals, classes, escapes and the wildcard alike.
 
-There is one more cost to pay: every existing spec that said `Lit 'a'` must now say `lit 'a'` (and a couple of `show`-output expectations change, since a literal now prints as `Sym (MkSet False [('a', 'a')])`). This churn is mechanical — a find-and-replace — but it is worth pausing on *why* it happened. Our old specs reached past the public idea of "a literal" and touched the constructor itself, an implementation detail. The detail changed, and the tests paid for the intimacy. The new specs, written against `lit`, will survive any future change to how literals are represented. Losing the constructor from the tests is not a chore; it is the design getting better.
+There is one more cost to pay: every existing spec that said `Lit 'a'` must now say `lit 'a'` (and a couple of `show`-output expectations change, since a literal now prints as `Sym (MkSet False [('a', 'a')])`). This churn is mechanical, a find-and-replace, but it is worth pausing on *why* it happened. Our old specs reached past the public idea of "a literal" and touched the constructor itself, an implementation detail. The detail changed, and the tests paid for the intimacy. The new specs, written against `lit`, will survive any future change to how literals are represented. Losing the constructor from the tests is not a chore; it is the design getting better.
 
 ```sh
 make test
@@ -316,11 +316,11 @@ This is commit [4d2733d](https://github.com/ubugeeei-prod/lets-start-functional/
 
 ## Summary
 
-- Enumerating a class's members cannot represent `.` or `[^"]`; describing sets symbolically — ranges plus a negation flag — makes every class, including "everything", a few words of data.
+- Enumerating a class's members cannot represent `.` or `[^"]`; describing sets symbolically (ranges plus a negation flag) makes every class, including "everything", a few words of data.
 - `member` computes membership with `any` over the ranges, and `/=` on booleans is exclusive-or: conditional negation in three characters.
-- `complement` flips one field — the symbolic representation makes negation free.
+- `complement` flips one field; the symbolic representation makes negation free.
 - `\d`, `\w`, `\s` are not features; they are named values of `CharSet`.
 - The AST refactor `Lit Char` → `Sym CharSet` was compiler-guided: change the type, and totality checking enumerates every function needing a new case. `deriv`'s new case swaps `==` for `member`.
 - `lit` remains as a plain function; the specs' switch from `Lit` to `lit` removed an implementation detail that had leaked into the tests.
 
-Next, we add `+`, `?`, `{n,m}` and string literals — and discover they cost nothing, in [Sugar Is Just Functions](./12-sugar.md).
+Next we add `+`, `?`, `{n,m}` and string literals, and discover they cost nothing, in [Sugar Is Just Functions](./12-sugar.md).

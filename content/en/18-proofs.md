@@ -5,11 +5,11 @@ description: Dependent types turn "r matches s" into a data type, and nullable's
 
 # Tests Become Theorems
 
-Every spec in this book so far checks finitely many examples, chosen by us. This chapter checks *all* inputs at once — and the test runner is the type checker.
+Every spec in this book so far checks finitely many examples, chosen by us. This chapter checks *all* inputs at once, and the test runner is the type checker.
 
 ## The limit of examples
 
-Our `nullable` specs assert that `nullable Eps` is `True`, that `nullable (lit 'a')` is `False`, and so on through a handful of cases. Good tests. But `Regex` is an infinite type; there will always be regexes no spec has met. When we say "`nullable r` is `True` exactly when `r` matches the empty string", we are making a claim about **every** regex — a for-all sentence — and no finite list of examples can pin down a for-all sentence.
+Our `nullable` specs assert that `nullable Eps` is `True`, that `nullable (lit 'a')` is `False`, and so on through a handful of cases. Good tests. But `Regex` is an infinite type; there will always be regexes no spec has met. When we say "`nullable r` is `True` exactly when `r` matches the empty string", we are making a claim about **every** regex, a for-all sentence, and no finite list of examples can pin one of those down.
 
 This is where Idris stops being "a nice functional language" and becomes what it actually is. In a dependently typed language, a for-all sentence can be written as a *type*, and a proof of it is an ordinary *program* with that type. If the program type-checks, the sentence is true — for every input, forever. No test data, no coverage gaps.
 
@@ -40,7 +40,7 @@ verifiedSpecs =
   ]
 ```
 
-Yes — the one runtime spec asserts `True`. It is a marker, so the suite output mentions this chapter. The real test is the second line of the module: `import Regex.Verified`. If that import compiles, the theorems hold; and right now it does not, which is this chapter's red:
+Yes: the one runtime spec asserts `True`. It is a marker, so the suite output mentions this chapter. The real test is the second line of the module: `import Regex.Verified`. If that import compiles, the theorems hold; and right now it does not, which is this chapter's red:
 
 ```
 Error: Module Regex.Verified not found
