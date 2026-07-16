@@ -114,7 +114,10 @@ const codeTheme = githubDarkDefault;
 const customCss = `
   * { box-shadow: none !important; text-shadow: none !important; }
   .content a { text-decoration: underline; text-underline-offset: 2px; }
-  .content h1, .content h2, .content h3 { letter-spacing: -0.01em; }
+  .content h1, .content h2, .content h3, .content h4, .header-title {
+    font-family: "Space Grotesk", "Zen Kaku Gothic New", "IBM Plex Sans JP", system-ui, sans-serif;
+    letter-spacing: -0.01em;
+  }
   /* the default theme fades code blocks with a top gradient — keep them flat */
   .content pre {
     background: var(--octc-color-code-bg) !important;
@@ -234,9 +237,12 @@ export default defineConfig({
         theme: defineTheme({
           extends: defaultTheme,
           entryPage: { mode: "subtle" },
+          // Same stacks as wtrclred.io: IBM Plex Sans JP for body,
+          // JetBrains Mono for code, Space Grotesk / Zen Kaku Gothic
+          // New for headings (via customCss below).
           fonts: {
-            sans: 'system-ui, -apple-system, "Segoe UI", "Hiragino Sans", "Noto Sans CJK JP", sans-serif',
-            mono: 'ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace',
+            sans: '"IBM Plex Sans JP", "Hiragino Sans", "Yu Gothic Medium", "Yu Gothic", system-ui, sans-serif',
+            mono: '"JetBrains Mono", ui-monospace, "SFMono-Regular", "SF Mono", Menlo, Consolas, monospace',
           },
           colors: {
             primary: "#111111",
@@ -274,6 +280,10 @@ export default defineConfig({
           embed: {
             head: [
               `<link rel="icon" type="image/svg+xml" href="${isJa ? "/ja" : ""}/favicon.svg" />`,
+              // Fonts, same as wtrclred.io.
+              `<link rel="preconnect" href="https://fonts.googleapis.com">`,
+              `<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>`,
+              `<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+JP:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@500;700&family=Zen+Kaku+Gothic+New:wght@400;500;700;900&display=swap" rel="stylesheet">`,
               // og:image must be an absolute URL — relative paths are
               // ignored by most scrapers.
               `<meta property="og:image" content="https://lets-start-functional.void.app/og.png" />`,

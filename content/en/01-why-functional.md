@@ -67,7 +67,7 @@ That is the pattern for the whole book: things that sound advanced — derivativ
 
 ## Why Idris 2, and not Haskell?
 
-"Learn functional programming" usually means "learn Haskell", so picking Idris 2 needs justifying. Idris is a functional language in the Haskell family — the syntax will look strikingly familiar to anyone who has seen Haskell — but it makes a few different choices, and for a *first* functional language, every one of those choices works in your favor.
+Haskell is the name that comes up first in most "learn functional programming" advice, so picking Idris 2 deserves an explanation. Idris is a functional language in the Haskell family (the syntax will look strikingly familiar if you have seen Haskell), but it makes a few different choices, and for a *first* functional language, every one of those choices works in your favor.
 
 **Idris is strict, not lazy.** In Haskell, expressions are evaluated lazily — not when you write them, but when something eventually demands their value. Laziness is powerful, but it means your intuition about *when* things run and *how much memory* they use has to be rebuilt from scratch, and that rebuild is one of Haskell's steepest learning curves.
 
