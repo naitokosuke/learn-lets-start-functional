@@ -5,7 +5,7 @@ description: Why test-first works even better in a typed language, and a complet
 
 # TDD and a Tiny Test Harness
 
-This is the last chapter of the introduction, and the first where we write code that stays in the project. Everything the book builds from here on will be driven by tests, so first we need something to run them — and building it ourselves turns out to be the perfect first exercise.
+This is the last chapter of the introduction, and the first where we write code that stays in the project. Everything the book builds from here on will be driven by tests, so first we need something to run them. Building it ourselves turns out to be the perfect first exercise.
 
 ## Test-first, in a language like this?
 
@@ -13,17 +13,17 @@ The rhythm of this book is classic test-driven development: write a test that fa
 
 A reasonable question: does a language with a strong type checker even need this? Doesn't the compiler already catch everything?
 
-No — and the two safety nets catch different acrobats. The type checker verifies your code is *coherent*: every case handled, every type aligned, every recursion (thanks to `%default total`) terminating. It cannot know that the derivative of `a*` with respect to `a` should be `a*` — that is a fact about *regular expressions*, not about types, and only a test can pin it down. Conversely, a test suite samples a few points; the type checker proves shapes for *all* inputs. We want both nets, at full strength, all the time.
+No, and the two safety nets catch different acrobats. The type checker verifies your code is *coherent*: every case handled, every type aligned, every recursion (thanks to `%default total`) terminating. It cannot know that the derivative of `a*` with respect to `a` should be `a*`: that is a fact about *regular expressions*, not about types, and only a test can pin it down. Conversely, a test suite samples a few points; the type checker proves shapes for *all* inputs. We want both nets, at full strength, all the time.
 
-Better still, in a compiled language the two nets combine into one workflow with a pleasing property: **the compiler is the first test**. When a new spec references a function that does not exist yet, the suite does not run and fail — it fails to *compile*:
+Better still, in a compiled language the two nets combine into one workflow with a pleasing property: **the compiler is the first test**. When a new spec references a function that does not exist yet, the suite does not run and fail; it fails to *compile*:
 
 ```
 Error: While processing right hand side of astSpecs. Undefined name Cat.
 ```
 
-That is not an obstacle to TDD; that *is* the red. A compile error is the most honest failing test there is — it fails before the program even starts — and in this book, most red phases begin exactly this way. Red means "the world does not satisfy this spec yet", and "the world does not even contain these names yet" qualifies with distinction.
+That is not an obstacle to TDD; that *is* the red. A compile error is the most honest failing test there is (it fails before the program even starts), and in this book, most red phases begin exactly this way. Red means "the world does not satisfy this spec yet", and "the world does not even contain these names yet" qualifies with distinction.
 
-So we need a test harness. We will not install one — partly to keep the project dependency-free (nothing but the compiler, as promised in [Setting Up](./03-setup.md)), but mostly because a test harness is a wonderful thing to build: small, useful, and secretly a functional-design lesson. Ours is a little over seventy lines, and here it is, top to bottom. It lives at [regex/tests/src/Harness.idr](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/src/Harness.idr), and — worth noting — the file has not changed since the day it was committed. Seventy-three lines, finished on day one.
+So we need a test harness. We will not install one, partly to keep the project dependency-free (nothing but the compiler, as promised in [Setting Up](./03-setup.md)), but mostly because a test harness is a wonderful thing to build: small, useful, and secretly a functional-design lesson. Ours is a little over seventy lines, and here it is, top to bottom. It lives at [regex/tests/src/Harness.idr](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/src/Harness.idr), and, worth noting, the file has not changed since the day it was committed. Seventy-three lines, finished on day one.
 
 ## A test is data
 
@@ -56,11 +56,11 @@ record Spec where
   details : String
 ```
 
-(New notation: lines starting with `|||` are doc comments, attached to the declaration below them. `public export` makes `Spec` — constructor, fields and all — visible to other modules; plain `export`, coming up, exposes just a name.)
+(New notation: lines starting with `|||` are doc comments, attached to the declaration below them. `public export` makes `Spec` (constructor, fields and all) visible to other modules; plain `export`, coming up, exposes just a name.)
 
-The design decision that shapes everything else is in the record: a `Spec` holds a `Bool`, not a function to call later. If you come from Jest or JUnit or pytest, a "test" is a callback registered with a framework, which decides when to invoke it, catches what it throws, and reports through machinery you cannot see. Here there is no framework and nothing to invoke. By the time a `Spec` exists, the interesting expression — `1 + 1 == 2`, or eventually `matches r "aaa"` — *has already been evaluated*, right where the spec was written. A test is not a computation to be managed. It is a result to be reported: description, verdict, details. Three fields of plain data.
+The design decision that shapes everything else is in the record: a `Spec` holds a `Bool`, not a function to call later. If you come from Jest or JUnit or pytest, a "test" is a callback registered with a framework, which decides when to invoke it, catches what it throws, and reports through machinery you cannot see. Here there is no framework and nothing to invoke. By the time a `Spec` exists, the interesting expression (`1 + 1 == 2`, or eventually `matches r "aaa"`) *has already been evaluated*, right where the spec was written. A test is not a computation to be managed; it is a result to be reported: description, verdict, details. Three fields of plain data.
 
-Why is that safe? Because in a pure language, evaluation *is* running. An expression like `matches r "aaa"` cannot write files, hang on the network, or interfere with the spec next to it — evaluating it can produce nothing but a value. All the machinery that test frameworks build to corral effects — setup and teardown, isolation, execution order — has nothing to do, because there are no effects to corral. Data does not need supervision.
+Why is that safe? Because in a pure language, evaluation *is* running. An expression like `matches r "aaa"` cannot write files, hang on the network, or interfere with the spec next to it; evaluating it can produce nothing but a value. All the machinery that test frameworks build to corral effects (setup and teardown, isolation, execution order) has nothing to do here, because plain data needs no supervision.
 
 ## Two ways to make a Spec
 
@@ -89,9 +89,9 @@ shouldBe desc actual expected =
     ("expected " ++ show expected ++ ", got " ++ show actual)
 ```
 
-`it` wraps a bare boolean; `shouldBe` compares two values and — its whole reason to exist — pre-bakes a useful failure message quoting both sides.
+`it` wraps a bare boolean; `shouldBe` compares two values and (its whole reason to exist) pre-bakes a useful failure message quoting both sides.
 
-Look at `shouldBe`'s signature with [crash-course](./04-idris-crash-course.md) eyes. It works for any type `a` — but not unconditionally. `Eq a` is required because the definition uses `==`, and `Show a` because the failure message uses `show`. The constraints are not boilerplate; they are the function's needs, stated in the type, checked by the compiler. Delete the `Show a =>` and the definition stops compiling, because there would be no way to print the values. (The `(actual : a)` syntax just names the arguments in the signature — documentation the type checker keeps honest.)
+Look at `shouldBe`'s signature with [crash-course](./04-idris-crash-course.md) eyes. It works for any type `a`, but not unconditionally. `Eq a` is required because the definition uses `==`, and `Show a` because the failure message uses `show`. The constraints are not boilerplate; they are the function's needs, stated in the type, checked by the compiler. Delete the `Show a =>` and the definition stops compiling, because there would be no way to print the values. (The `(actual : a)` syntax just names the arguments in the signature: documentation the type checker keeps honest.)
 
 ## Reporting is pure too
 
@@ -105,7 +105,7 @@ render spec =
     else "  FAIL  " ++ spec.description ++ "\n        " ++ spec.details
 ```
 
-The instinct from most languages is to write this as "print the pass line, or print the fail lines". `render` refuses: it *computes the string* and hands it back. Nothing is printed. This looks like a distinction without a difference until you try to test your test harness, or want the report sorted, filtered, or written to a file — a function returning a `String` composes with all of that for free, while a function that prints composes with nothing. Pure as far as possible, effects at the last possible moment.
+The instinct from most languages is to write this as "print the pass line, or print the fail lines". `render` refuses: it *computes the string* and hands it back. Nothing is printed. This looks like a distinction without a difference until you try to test your test harness, or want the report sorted, filtered, or written to a file. A function returning a `String` composes with all of that for free, while a function that prints composes with nothing. Pure as far as possible, effects at the last possible moment.
 
 ## The one impure function
 
@@ -127,11 +127,11 @@ runSpecs specs = do
   when (passedCount /= length specs) exitFailure
 ```
 
-The doc comment says it plainly: this is the only place in the harness where `IO` shows up — and apart from the `main` that calls it, the only place in the entire test suite we will ever write. Everything funnels down to one `do` block that prints lines, prints a summary, and sets the exit code (that `exitFailure` is why `make test` can fail a CI build; it is what `import System` was for).
+The doc comment says it plainly: this is the only place in the harness where `IO` shows up, and apart from the `main` that calls it, the only place in the entire test suite we will ever write. Everything funnels down to one `do` block that prints lines, prints a summary, and sets the exit code (that `exitFailure` is why `make test` can fail a CI build; it is what `import System` was for).
 
-The body is a tour of the crash course cashing in. `traverse_ (putStrLn . render) specs` reads "for each spec: render, then print" — the `.` composes the two functions, and `traverse_` runs the resulting action over the list. `filter passed specs` is the quiet showstopper: `passed` is a record field, but a field is just a function `Spec -> Bool`, so it slots straight into `filter`. Counting the passes is `length` of a `filter` — the "pure values are easy to count, filter, and print" promise from the record's doc comment, redeemed. And per the fun fact, the count lives in `passedCount`, because the obvious name is a keyword. The small print: `runSpecs` is marked `covering`, one honesty notch below the `total` gold standard — a visible little flag that says the strict all-inputs-terminate discipline is a promise we make about the pure core, and this function is the edge of it.
+The body is a tour of the crash course cashing in. `traverse_ (putStrLn . render) specs` reads "for each spec: render, then print": the `.` composes the two functions, and `traverse_` runs the resulting action over the list. `filter passed specs` is the quiet showstopper: `passed` is a record field, but a field is just a function `Spec -> Bool`, so it slots straight into `filter`. Counting the passes is `length` of a `filter`: the "pure values are easy to count, filter, and print" promise from the record's doc comment, redeemed. And per the fun fact, the count lives in `passedCount`, because the obvious name is a keyword. The small print: `runSpecs` is marked `covering`, one honesty notch below the `total` gold standard: a visible little flag that says the strict all-inputs-terminate discipline is a promise we make about the pure core, and this function is the edge of it.
 
-This shape — *pure core, IO shell* — is the first genuinely functional design idea in the book, and the harness exists partly to let you meet it at a small scale. A file of pure data and pure functions, with one thin impure skin at the bottom. The regex engine will have the same silhouette, with an even thinner skin: none at all.
+This shape, *pure core, IO shell*, is the first genuinely functional design idea in the book, and the harness exists partly to let you meet it at a small scale. A file of pure data and pure functions, with one thin impure skin at the bottom. The regex engine will have the same silhouette, with an even thinner skin: none at all.
 
 ## Wiring it up
 
@@ -177,7 +177,7 @@ modules = Main
         , Harness
 ```
 
-`depends = regex` points at the library (via the Makefile's `depends/` trick), and `main`/`executable` make this package a runnable program named `tests`. Meanwhile the library itself, at this point in history, is one module of ceremony — `src/Regex/Core.idr` in its entirety:
+`depends = regex` points at the library (via the Makefile's `depends/` trick), and `main`/`executable` make this package a runnable program named `tests`. Meanwhile the library itself, at this point in history, is one module of ceremony. Here is `src/Regex/Core.idr` in its entirety:
 
 ```idris
 ||| The heart of the engine.
@@ -210,7 +210,7 @@ Now compiling the executable: tests
 3/3 passed
 ```
 
-`3/3 passed` — the harness works, verified by itself, which is as bootstrappy as this book gets. And for completeness, here is what it looks like when things go wrong (sabotage the second spec to expect `3` and rerun):
+`3/3 passed`: the harness works, verified by itself, which is as bootstrappy as this book gets. And for completeness, here is what it looks like when things go wrong (sabotage the second spec to expect `3` and rerun):
 
 ```
   ok    true is true
@@ -221,24 +221,24 @@ Now compiling the executable: tests
 make: *** [test] Error 1
 ```
 
-There is `shouldBe`'s pre-baked message earning its keep, and `exitFailure` propagating up through `make`. You will not see many `FAIL` lines in this book — but only because each one gets fixed in the very next section.
+There is `shouldBe`'s pre-baked message earning its keep, and `exitFailure` propagating up through `make`. You will not see many `FAIL` lines in this book, but only because each one gets fixed in the very next section.
 
 ## The rhythm, and where to watch it
 
-From here to the end, the project's git history keeps a strict beat, two commits per step. First a commit that adds specs — its message ends in `(red)`, and at that commit `make test` fails, almost always as a compile error, because the specs name things that do not exist. Then a commit with the smallest implementation that satisfies them — ending in `(green)`, and at that commit the suite passes again. The history is never broken anywhere *except* exactly at the red commits, and there it is broken on purpose, as documentation of what each test actually demanded.
+From here to the end, the project's git history keeps a strict beat, two commits per step. First a commit that adds specs: its message ends in `(red)`, and at that commit `make test` fails, almost always as a compile error, because the specs name things that do not exist. Then a commit with the smallest implementation that satisfies them, ending in `(green)`, and at that commit the suite passes again. The history is never broken anywhere *except* exactly at the red commits, and there it is broken on purpose, as documentation of what each test actually demanded.
 
-You can see the first full cycle waiting just past the scaffold: [the scaffold commit](https://github.com/ubugeeei-prod/lets-start-functional/commit/fd1795e068cc36e9d12604bea38b0bb03fa14cfb) that added everything in this chapter, then [`test(core): specs for the Regex AST (red)`](https://github.com/ubugeeei-prod/lets-start-functional/commit/51d326b5444518b66b8b9ed0b468352ff048a63e), then [`feat(core): the Regex AST — six constructors, Show, Eq (green)`](https://github.com/ubugeeei-prod/lets-start-functional/commit/832542c132ce21d2b7902207cc654ca9621f02fd). That `Undefined name Cat` error quoted at the top of this chapter? It is exactly what `make test` prints at that red commit — `Cat` is one of the six constructors the specs demand and the empty `Regex.Core` does not yet provide.
+You can see the first full cycle waiting just past the scaffold: [the scaffold commit](https://github.com/ubugeeei-prod/lets-start-functional/commit/fd1795e068cc36e9d12604bea38b0bb03fa14cfb) that added everything in this chapter, then [`test(core): specs for the Regex AST (red)`](https://github.com/ubugeeei-prod/lets-start-functional/commit/51d326b5444518b66b8b9ed0b468352ff048a63e), then [`feat(core): the Regex AST — six constructors, Show, Eq (green)`](https://github.com/ubugeeei-prod/lets-start-functional/commit/832542c132ce21d2b7902207cc654ca9621f02fd). That `Undefined name Cat` error quoted at the top of this chapter? It is exactly what `make test` prints at that red commit: `Cat` is one of the six constructors the specs demand and the empty `Regex.Core` does not yet provide.
 
-Which is the cue for the next chapter: the introduction is over, and it is time to answer this book's first real question — what, exactly, *is* a regular expression, as a piece of data?
+Which is the cue for the next chapter: the introduction is over, and it is time to answer this book's first real question. What, exactly, *is* a regular expression, as a piece of data?
 
 ## Summary
 
-- The type checker and the test suite catch different things: coherence for all inputs versus meaning at chosen points — we run both at full strength.
+- The type checker and the test suite catch different things: coherence for all inputs versus meaning at chosen points; we run both at full strength.
 - In a compiled language the compiler is the first test: a spec referencing undefined names fails at compile time, and that *is* a legitimate red.
-- A `Spec` is already-evaluated data — description, verdict, details — safe because pure evaluation has no effects to supervise, so no framework is needed.
+- A `Spec` is already-evaluated data (description, verdict, details), safe because pure evaluation has no effects to supervise, so no framework is needed.
 - `it` and `shouldBe` build specs; `shouldBe`'s `Show a => Eq a =>` constraints state exactly what it needs and nothing more.
-- `render` computes strings without printing; `runSpecs` is the single `IO` function in the whole suite — the pure-core, IO-shell silhouette the engine will repeat.
+- `render` computes strings without printing; `runSpecs` is the single `IO` function in the whole suite: the pure-core, IO-shell silhouette the engine will repeat.
 - Suites are `List Spec`, composed with `++`; `make test` reports `3/3 passed` on the scaffold, and a failure prints both expected and actual, then fails the build.
-- The repo's history alternates `(red)` spec commits and `(green)` implementation commits — the beat every remaining chapter marches to.
+- The repo's history alternates `(red)` spec commits and `(green)` implementation commits, the beat every remaining chapter marches to.
 
 Time for the first real red: in [A Regex Is Data](./06-regex-as-data.md), the specs demand six constructors that do not exist yet, and the compiler obliges with a satisfying refusal.

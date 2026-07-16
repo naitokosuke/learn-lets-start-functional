@@ -17,13 +17,13 @@ On macOS, Homebrew has it:
 brew install idris2
 ```
 
-On any OS with Nix (Linux, macOS, WSL), the nixpkgs package is well maintained — this is one of the smoothest routes:
+On any OS with Nix (Linux, macOS, WSL), the nixpkgs package is well maintained, and this is one of the smoothest routes:
 
 ```sh
 nix profile install nixpkgs#idris2
 ```
 
-On Ubuntu and other Debian-flavored Linux there is no official package in the main archives; your options are a community PPA or building from source, which is a documented and honestly not-bad experience (Idris 2 bootstraps via Chez Scheme — the [install guide](https://github.com/idris-lang/Idris2/blob/main/INSTALL.md) walks through it). Also worth knowing about: [pack](https://github.com/stefan-hoeck/idris2-pack), the community package manager that many Idris developers use day to day. It can install the compiler *and* manage libraries, and if you plan to keep writing Idris after this book, it is the ecosystem tool to learn. For this book alone you will not need it — our project deliberately depends on nothing but the compiler.
+On Ubuntu and other Debian-flavored Linux there is no official package in the main archives; your options are a community PPA or building from source, which is a documented and honestly not-bad experience (Idris 2 bootstraps via Chez Scheme; the [install guide](https://github.com/idris-lang/Idris2/blob/main/INSTALL.md) walks through it). Also worth knowing about: [pack](https://github.com/stefan-hoeck/idris2-pack), the community package manager that many Idris developers use day to day. It can install the compiler *and* manage libraries, and if you plan to keep writing Idris after this book, it is the ecosystem tool to learn. For this book alone you will not need it: our project deliberately depends on nothing but the compiler.
 
 On Windows, use WSL and then follow the Linux route inside it (the Nix one is the least friction). Idris 2 development happens almost entirely on Unix-likes, and WSL sidesteps every rough edge at once.
 
@@ -38,7 +38,7 @@ If that prints, you are in business.
 
 ## First contact: the REPL
 
-Idris comes with a REPL — a read-eval-print loop — and it will be our constant companion, so let us shake hands with it now. Run `idris2` with no arguments:
+Idris comes with a REPL (a read-eval-print loop), and it will be our constant companion, so let us shake hands with it now. Run `idris2` with no arguments:
 
 ```
      ____    __     _         ___
@@ -65,7 +65,7 @@ Main> :t "hello"
 fromString "hello" : String
 ```
 
-Type on the right of the colon: `"hello"` is a `String`. (The `fromString` on the left is Idris showing its work — string literals are overloadable, like in Haskell — and you can ignore it.)
+Type on the right of the colon: `"hello"` is a `String`. (The `fromString` on the left is Idris showing its work; string literals are overloadable, like in Haskell, and you can ignore it.)
 
 Now a small surprise that teaches a big lesson. Try to print something:
 
@@ -78,7 +78,7 @@ Error: Can't find an implementation for HasIO ?io.
      ^^^^^^^^^^^^^^^^
 ```
 
-The REPL *evaluates* expressions; it does not *run* them, and `putStrLn "hello"` is not a string that got printed — it is a description of an action. (The error is the REPL failing to guess which flavor of runnable context you meant; the distinction between describing an effect and performing one is a theme we will develop properly later.) To actually perform an action, ask with `:exec`:
+The REPL *evaluates* expressions; it does not *run* them, and `putStrLn "hello"` is not a string that got printed: it is a description of an action. (The error is the REPL failing to guess which flavor of runnable context you meant; the distinction between describing an effect and performing one is a theme we will develop properly later.) To actually perform an action, ask with `:exec`:
 
 ```repl
 Main> :exec putStrLn "hello"
@@ -96,7 +96,7 @@ That is the entire REPL survival kit: evaluate by typing, `:t` for types, `:exec
 
 ## An editor
 
-Any editor works — this book never requires more than "edit file, run `make test`". That said, Idris has a language server, [idris2-lsp](https://github.com/idris-community/idris2-lsp), and VS Code with the *idris2-lsp* extension gives you types on hover, errors as you type, and interactive hole inspection. If you installed pack, `pack install-app idris2-lsp` gets you the server; otherwise it builds from source against your compiler version. Nice to have, genuinely not required — everything the language server shows you, the REPL and compiler will also tell you, and the book only ever assumes the latter.
+Any editor works; this book never requires more than "edit file, run `make test`". That said, Idris has a language server, [idris2-lsp](https://github.com/idris-community/idris2-lsp), and VS Code with the *idris2-lsp* extension gives you types on hover, errors as you type, and interactive hole inspection. If you installed pack, `pack install-app idris2-lsp` gets you the server; otherwise it builds from source against your compiler version. Nice to have, genuinely not required: everything the language server shows you, the REPL and compiler will also tell you, and the book only ever assumes the latter.
 
 ## The repository
 
@@ -107,7 +107,7 @@ git clone https://github.com/ubugeeei-prod/lets-start-functional.git
 cd lets-start-functional
 ```
 
-Everything we build lives under `regex/`. Here is the shape of it — this is the *finished* state, the code as it stands at the end of the book:
+Everything we build lives under `regex/`. Here is the shape of it. This is the *finished* state, the code as it stands at the end of the book:
 
 ```
 regex/
@@ -134,7 +134,7 @@ regex/
 └── bench/              the race from the second-to-last chapter
 ```
 
-Do not be alarmed that the finished thing has ten source modules — remember, the commit history is the book, and at the first code commit `src/` contains exactly one nearly-empty file. You will write all of this.
+Do not be alarmed that the finished thing has ten source modules. Remember, the commit history is the book, and at the first code commit `src/` contains exactly one nearly-empty file. You will write all of this.
 
 ### The package file, field by field
 
@@ -161,7 +161,7 @@ modules = Regex
         , Regex.Lex
 ```
 
-`package regex` names the package — this is the name other packages will use to depend on it. `version`, `authors`, `license`, and `brief` are metadata, exactly what they look like. `sourcedir = "src"` says where source files live, and `modules` lists every module in the package: module `Regex.Core` corresponds to the file `src/Regex/Core.idr`, dots mapping to directory separators. When we add a module to the project — which we will do many times — the ritual is always the same: create the file, add one line here. (The list above is the finished state; it starts life as just `Regex.Core`.)
+`package regex` names the package: this is the name other packages will use to depend on it. `version`, `authors`, `license`, and `brief` are metadata, exactly what they look like. `sourcedir = "src"` says where source files live, and `modules` lists every module in the package: module `Regex.Core` corresponds to the file `src/Regex/Core.idr`, dots mapping to directory separators. When we add a module to the project (which we will do many times), the ritual is always the same: create the file, add one line here. (The list above is the finished state; it starts life as just `Regex.Core`.)
 
 There is a second package file, [tests/tests.ipkg](https://github.com/ubugeeei-prod/lets-start-functional/blob/main/regex/tests/tests.ipkg), which describes the test suite. It has two fields the library does not: `main = Main` and `executable = tests`, which turn the package into a runnable program, and `depends = regex`, which says the tests use the library. The next chapter reads it line by line, so we will leave it until then.
 
@@ -207,9 +207,9 @@ clean:
 	rm -rf build tests/build tests/depends bench/build bench/depends
 ```
 
-`build` compiles the library. `test` is the one you will type hundreds of times: it rebuilds the library, refreshes the dependency, compiles the test package, and runs it. `repl` opens the REPL with our library's modules loadable — invaluable for poking at the engine interactively. `bench` belongs to [The Race](./19-the-race.md), much later.
+`build` compiles the library. `test` is the one you will type hundreds of times: it rebuilds the library, refreshes the dependency, compiles the test package, and runs it. `repl` opens the REPL with our library's modules loadable, which is invaluable for poking at the engine interactively. `bench` belongs to [The Race](./19-the-race.md), much later.
 
-The `install` target deserves an honest explanation, because it looks like a hack and is in fact a deliberate choice. The tests declare `depends = regex`, so Idris needs to *find* the compiled `regex` package somewhere. The standard answer is a global package directory — but that assumes you can write to wherever Idris is installed, which is false on Nix, awkward in CI, and generally a per-machine adventure. Fortunately Idris 2 also looks for packages in a `depends/` directory sitting next to the `.ipkg` being built. So `install` simply copies the library's compiled modules (the `build/ttc/` output — TTC is Idris's compiled-module format) into `tests/depends/regex-0.1.0/` along with a minimal two-line `.ipkg`, and the test build finds everything it needs relative to the project. No global state, no permissions, works identically everywhere. That is the whole trick.
+The `install` target deserves an honest explanation, because it looks like a hack and is in fact a deliberate choice. The tests declare `depends = regex`, so Idris needs to *find* the compiled `regex` package somewhere. The standard answer is a global package directory, but that assumes you can write to wherever Idris is installed, which is false on Nix, awkward in CI, and generally a per-machine adventure. Fortunately Idris 2 also looks for packages in a `depends/` directory sitting next to the `.ipkg` being built. So `install` simply copies the library's compiled modules (the `build/ttc/` output; TTC is Idris's compiled-module format) into `tests/depends/regex-0.1.0/` along with a minimal two-line `.ipkg`, and the test build finds everything it needs relative to the project. No global state, no permissions, works identically everywhere. That is the whole trick.
 
 ### Run it
 
@@ -220,7 +220,7 @@ cd regex
 make test
 ```
 
-The first run compiles everything, so it takes a minute. It looks like this (trimmed — the suite at the end of the book has 167 specs):
+The first run compiles everything, so it takes a minute. It looks like this (trimmed; the suite at the end of the book has 167 specs):
 
 ```
 idris2 --build regex.ipkg
@@ -248,18 +248,18 @@ Now compiling the executable: tests
 167/167 passed
 ```
 
-Every line of that output is a promise this book makes to you, kept in advance. `true is true` at the top is the very first sanity check we write in the next chapter; `dropping whitespace is a List problem, not a lexer problem` at the bottom is the capstone lexer. If you see `167/167 passed`, your machine is ready for all of it.
+Every line of that output is something you will write yourself. `true is true` at the top is the very first sanity check we write in the next chapter; `dropping whitespace is a List problem, not a lexer problem` at the bottom is the capstone lexer. If you see `167/167 passed`, your machine is ready for all of it.
 
 > [!TIP]
 > If you want to follow along commit by commit, `git log --oneline --reverse` shows the whole red/green history in reading order, and `git checkout <sha>` puts the working tree at any step. Just remember to come back with `git checkout main`.
 
 ## Summary
 
-- The book targets Idris 2 version 0.8.0: `brew install idris2` on macOS, `nix profile install nixpkgs#idris2` anywhere Nix runs, source or PPA on Ubuntu, WSL on Windows — verify with `idris2 --version`.
+- The book targets Idris 2 version 0.8.0: `brew install idris2` on macOS, `nix profile install nixpkgs#idris2` anywhere Nix runs, source or PPA on Ubuntu, WSL on Windows; verify with `idris2 --version`.
 - The REPL survival kit: type an expression to evaluate it, `:t` for its type, `:exec` to actually run an action, `:q` to leave.
 - VS Code with idris2-lsp is a nice upgrade, but the book never requires more than an editor and `make test`.
-- The project is two Idris packages — the `regex` library and its test suite — described by `.ipkg` files whose `modules` list grows as the book proceeds.
-- The Makefile's `depends/` trick copies compiled modules next to the test package, so no writable global package directory is ever needed — friendly to Nix and CI.
+- The project is two Idris packages (the `regex` library and its test suite) described by `.ipkg` files whose `modules` list grows as the book proceeds.
+- The Makefile's `depends/` trick copies compiled modules next to the test package, so no writable global package directory is ever needed, which keeps it friendly to Nix and CI.
 - `make test` at the repository's final state builds everything and reports `167/167 passed`; you will earn every one of those lines.
 
 Next, the promised crash course: enough Idris to read every chapter that follows, in [An Idris Crash Course](./04-idris-crash-course.md).

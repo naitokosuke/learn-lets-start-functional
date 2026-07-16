@@ -33,11 +33,11 @@ const toc: Part[] = [
     en: "Introduction",
     ja: "はじめに",
     items: [
-      { slug: "01-why-functional", en: "Why Functional? Why Idris?", ja: "なぜ関数型?なぜ Idris?" },
+      { slug: "01-why-functional", en: "Why Functional? Why Idris?", ja: "なぜ関数型?なぜIdris?" },
       { slug: "02-regex-engines", en: "What Is a Regex Engine?", ja: "正規表現エンジンとは" },
       { slug: "03-setup", en: "Setting Up", ja: "環境構築" },
-      { slug: "04-idris-crash-course", en: "An Idris Crash Course", ja: "Idris 速習" },
-      { slug: "05-tdd", en: "TDD and a Tiny Test Harness", ja: "TDD と小さなテストハーネス" },
+      { slug: "04-idris-crash-course", en: "An Idris Crash Course", ja: "Idris速習" },
+      { slug: "05-tdd", en: "TDD and a Tiny Test Harness", ja: "TDDと小さなテストハーネス" },
     ],
   },
   {
@@ -59,17 +59,17 @@ const toc: Part[] = [
       { slug: "12-sugar", en: "Sugar Is Just Functions", ja: "糖衣構文はただの関数" },
       { slug: "13-parser-combinators", en: "Parser Combinators", ja: "パーサコンビネータ" },
       { slug: "14-pattern-syntax", en: "Parsing Pattern Syntax", ja: "パターン構文をパースする" },
-      { slug: "15-public-api", en: "A Public API", ja: "公開 API" },
+      { slug: "15-public-api", en: "A Public API", ja: "公開API" },
     ],
   },
   {
     en: "Idris Power-Ups",
-    ja: "Idris の真価",
+    ja: "Idrisの真価",
     items: [
       { slug: "16-interfaces", en: "Interfaces and Two Monoids", ja: "インターフェースと2つのモノイド" },
       { slug: "17-pretty-printing", en: "Printing Patterns Back", ja: "パターンを印字し直す" },
       { slug: "18-proofs", en: "Tests Become Theorems", ja: "テストが定理になる" },
-      { slug: "19-the-race", en: "The Race: Linear vs Backtracking", ja: "対決:線形時間 vs バックトラック" },
+      { slug: "19-the-race", en: "The Race: Linear vs Backtracking", ja: "対決:線形時間vsバックトラック" },
       { slug: "20-lexer", en: "Capstone: A Lexer", ja: "総仕上げ:レキサ" },
       { slug: "21-whats-next", en: "What's Next", ja: "この先へ" },
     ],
@@ -122,6 +122,9 @@ const codeTheme = githubDarkDefault;
 
 const customCss = `
   * { box-shadow: none !important; text-shadow: none !important; }
+  /* CJK-Latin spacing comes from the engine, not from manual spaces */
+  body { text-autospace: normal; }
+  pre, code, kbd, samp { text-autospace: no-autospace; }
   .content a { text-decoration: underline; text-underline-offset: 2px; }
   .content h1, .content h2, .content h3, .content h4, .header-title {
     font-family: "Space Grotesk", "Zen Kaku Gothic New", "IBM Plex Sans JP", system-ui, sans-serif;
@@ -280,7 +283,7 @@ export default defineConfig({
           },
           sidebar,
           footer: {
-            message: isJa ? "MIT ライセンスで公開" : "Released under the MIT License",
+            message: isJa ? "MITライセンスで公開" : "Released under the MIT License",
             copyright: "© 2026 ubugeeei",
           },
           socialLinks: {
