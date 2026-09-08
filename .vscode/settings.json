@@ -1,7 +1,16 @@
 {
+  "editor.inlineSuggest.enabled": false,
+
   "idris.idrisPath": "cd regex && idris2",
   "idris.idris2Mode": true,
   "idris.autosave": "always",
   "idris.hoverAction": "Type At",
-  "editor.inlineSuggest.enabled": false
+
+  "[idris]": {
+    "files.trimTrailingWhitespace": true,
+    "files.insertFinalNewline": true,
+    "files.trimFinalNewlines": true,
+    "editor.insertSpaces": true,
+    "editor.tabSize": 2
+  }
 }

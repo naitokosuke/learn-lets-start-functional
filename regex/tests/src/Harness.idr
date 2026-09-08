@@ -31,8 +31,8 @@ record Spec where
 ||| it "the empty list has length zero" (length [] == 0)
 ||| ```
 export
-it : String -> Bool -> Spec
-it desc ok = MkSpec desc ok "expected the condition to hold"
+it: String -> Bool -> Spec
+it desc ok = MkSpec desc ok "Expected the condition to hold"
 
 ||| Expect two values to be equal, reporting both sides when they differ.
 |||
@@ -45,16 +45,17 @@ it desc ok = MkSpec desc ok "expected the condition to hold"
 export
 shouldBe : Show a => Eq a => String -> (actual : a) -> (expected : a) -> Spec
 shouldBe desc actual expected =
-  MkSpec desc (actual == expected)
-    ("expected " ++ show expected ++ ", got " ++ show actual)
+  mkSpec desc (actual == expected)
+    ("Expected " ++ show expected ++ ", got" ++ show actual)
 
-||| Render one spec as a report line. Pure: no printing happens here.
+
+||| Render one spec as a report line. Pure: no printing happes here.
 export
 render : Spec -> String
 render spec =
   if spec.passed
-    then "  ok    " ++ spec.description
-    else "  FAIL  " ++ spec.description ++ "\n        " ++ spec.details
+    then " PASS " ++ spec.description
+    else " FAIL " ++ spec.description ++ "\n " ++ spec.details
 
 ||| Run a whole suite: print every line, then a summary, and exit
 ||| with a non-zero code if anything failed.
